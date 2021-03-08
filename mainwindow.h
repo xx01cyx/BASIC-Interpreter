@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "scanner.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -10,6 +11,8 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
+    Scanner* scanner;
 
     void displayCode();
     void readFile(QString);
@@ -22,6 +25,8 @@ public:
 private slots:
     void on_pushButton_load_clicked();
     void on_lineEdit_command_returnPressed();
+
+    void on_pushButton_run_clicked();
 
 private:
     Ui::MainWindow *ui;

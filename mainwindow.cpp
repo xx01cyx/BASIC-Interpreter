@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    scanner = new Scanner();
 }
 
 MainWindow::~MainWindow()
@@ -17,6 +18,10 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::displayCode()
+{
+    ui->textBrowser_code->setText(scanner->getCode());
+}
 
 void MainWindow::on_pushButton_load_clicked()
 {
@@ -35,6 +40,8 @@ void MainWindow::readFile(QString filename)
     QTextStream in(&file);
     QString code = in.readAll();
     ui->textBrowser_code->setText(code);
+    scanner->setCode(code);
+    this->displayCode();
 }
 
 QString MainWindow::openFile()
@@ -57,7 +64,21 @@ void MainWindow::on_lineEdit_command_returnPressed()
 {
     QString code = ui->lineEdit_command->text();
 
-    ui->textBrowser_code->setText(code);
+    scanner->insertCode(code);
+
+    this->displayCode();
 
     ui->lineEdit_command->clear();
+}
+
+void MainWindow::on_pushButton_run_clicked()
+{
+    scanner->scan();
+
+    for (auto line : scanner->tokens) {
+        ui->textBrowser_result->append(QString::number(line.first));
+        auto lineTokens = line.second;
+        for (auto token : *(lineTokens))
+            ui->textBrowser_result->append(token->toString());
+    }
 }
