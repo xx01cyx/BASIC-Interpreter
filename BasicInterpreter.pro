@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     error.cpp \
     expr.cpp \
+    interpreter.cpp \
     main.cpp \
     mainwindow.cpp \
     parser.cpp \
@@ -20,6 +21,7 @@ SOURCES += \
 HEADERS += \
     error.h \
     expr.h \
+    interpreter.h \
     mainwindow.h \
     parser.h \
     scanner.h \

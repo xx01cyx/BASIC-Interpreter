@@ -75,10 +75,22 @@ void MainWindow::on_pushButton_run_clicked()
 {
     scanner->scan();
 
+    Parser* parser = new Parser(scanner->tokens);
+    parser->parse();
+
+    Interpreter* interpreter = new Interpreter(parser->expressions);
+    interpreter->interpret();
+
     for (auto line : scanner->tokens) {
         ui->textBrowser_result->append(QString::number(line.first));
         auto lineTokens = line.second;
         for (auto token : *(lineTokens))
             ui->textBrowser_result->append(token->toString());
+    }
+
+    for (auto line : interpreter->parserTester) {
+        ui->textBrowser_result->append(QString::number(line.first));
+        int parseResult = line.second;
+        ui->textBrowser_result->append(QString::number(parseResult));
     }
 }

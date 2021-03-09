@@ -34,7 +34,7 @@ QString Scanner::getCode()
 void Scanner::scan()
 {
     int n = code.length();
-    qDebug() << "code length: " << n << Qt::endl;
+
     while (current != n)
         scanLine();
 }
@@ -52,7 +52,7 @@ void Scanner::scanLine()
 
     while (peek() == '\n')
         advance();   // Skip '\n'
-    qDebug() << "current: " << current << Qt::endl;
+
 }
 
 int Scanner::getLineNumber()
@@ -63,7 +63,6 @@ int Scanner::getLineNumber()
 
     QString lineNumberStr = code.mid(start, current - start);
     int lineNumber = lineNumberStr.toInt();
-    qDebug() << lineNumber << Qt::endl;
 
     tokens[lineNumber] = make_shared<vector<shared_ptr<Token>>>();
 

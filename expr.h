@@ -74,5 +74,17 @@ public:
     }
 };
 
+class GroupingExpr : public Expr
+{
+public:
+    ExprPtr expr;
+
+    GroupingExpr(ExprPtr e) : expr(e) {}
+
+    int evaluate() override {
+        return expr->evaluate();
+    }
+};
+
 
 #endif // EXPR_H

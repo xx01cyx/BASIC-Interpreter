@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include "scanner.h"
+#include "parser.h"
+#include "interpreter.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

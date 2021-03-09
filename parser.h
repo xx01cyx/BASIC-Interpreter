@@ -17,6 +17,7 @@ public:
     map<int, ExprPtr> expressions;  // to be revised
 
     Parser(map<int, shared_ptr<Tokens>>& tokens);
+    void parse();
 
 private:
 
@@ -24,8 +25,7 @@ private:
     map<int, shared_ptr<Tokens>>::const_iterator mapIt;
     vector<TokenPtr>::const_iterator tokenIt;
 
-    void parse();
-
+    ExprPtr expression();
     ExprPtr term();
     ExprPtr factor();
     ExprPtr unaryPower();
@@ -34,6 +34,7 @@ private:
     ExprPtr primary();
 
     bool match(TokenType type);
+    bool endOfLine();
     void advance();
     TokenPtr previous();
 
