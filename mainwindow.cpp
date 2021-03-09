@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QFileDialog>
 #include <QDebug>
+#include "error.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -73,13 +74,17 @@ void MainWindow::on_lineEdit_command_returnPressed()
 
 void MainWindow::on_pushButton_run_clicked()
 {
-    scanner->scan();
+    try {
+        scanner->scan();
 
-    Parser* parser = new Parser(scanner->tokens);
-    parser->parse();
+        Parser* parser = new Parser(scanner->tokens);
+        parser->parse();
+    } catch (Error e) {
+        qDebug() << e.message << Qt::endl;
+    }
 
-    Interpreter* interpreter = new Interpreter(parser->expressions);
-    interpreter->interpret();
+    //    Interpreter* interpreter = new Interpreter(parser->expressions);
+    //    interpreter->interpret();
 
     for (auto line : scanner->tokens) {
         ui->textBrowser_result->append(QString::number(line.first));
@@ -88,9 +93,10 @@ void MainWindow::on_pushButton_run_clicked()
             ui->textBrowser_result->append(token->toString());
     }
 
-    for (auto line : interpreter->parserTester) {
-        ui->textBrowser_result->append(QString::number(line.first));
-        int parseResult = line.second;
-        ui->textBrowser_result->append(QString::number(parseResult));
-    }
+
+//    for (auto line : interpreter->parserTester) {
+//        ui->textBrowser_result->append(QString::number(line.first));
+//        int parseResult = line.second;
+//        ui->textBrowser_result->append(QString::number(parseResult));
+//    }
 }

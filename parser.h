@@ -6,6 +6,7 @@
 #include <memory>
 #include "token.h"
 #include "expr.h"
+#include "stmt.h"
 #include "error.h"
 
 using namespace std;
@@ -14,7 +15,7 @@ class Parser
 {
 public:
 
-    map<int, ExprPtr> expressions;  // to be revised
+    map<int, StmtPtr> statements;
 
     Parser(map<int, shared_ptr<Tokens>>& tokens);
     void parse();
@@ -24,6 +25,17 @@ private:
     map<int, shared_ptr<Tokens>> tokens;
     map<int, shared_ptr<Tokens>>::const_iterator mapIt;
     vector<TokenPtr>::const_iterator tokenIt;
+
+    void parseLine();
+
+    StmtPtr statement();
+    StmtPtr remark();
+    StmtPtr let();
+    StmtPtr print();
+    StmtPtr input();
+    StmtPtr goTo();
+    StmtPtr ifThen();
+    StmtPtr end();
 
     ExprPtr expression();
     ExprPtr term();
