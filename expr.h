@@ -4,15 +4,20 @@
 #include <QString>
 #include <memory>
 #include <math.h>
+#include <QHash>
 #include "token.h"
+#include "error.h"
+//#include "environment.h"
 
 using namespace std;
+
+typedef QHash<QString, int> Environment;
 
 class Expr
 {
 public:
     Expr() {}
-    virtual int evaluate() = 0;
+    virtual int evaluate(Environment& environment) = 0;
 };
 
 typedef shared_ptr<Expr> ExprPtr;
@@ -26,7 +31,7 @@ public:
 
     ConstantExpr(int v) : value(v) {}
 
-    int evaluate() override { return value; }
+    int evaluate(Environment& environment) override { return value; }
 
 };
 
@@ -37,7 +42,11 @@ public:
 
     IdentifierExpr(QString n) : name(n) {}
 
-    int evaluate() override { return 0; }
+    int evaluate(Environment& environment) override {
+        if (environment.find(name) != environment.end())
+            return environment[name];
+        throw RunTimeError("The variable " + name + " does not exist.");
+    }
 
 };
 
@@ -48,7 +57,9 @@ public:
 
     UnaryExpr(ExprPtr r) : right(r) {}
 
-    int evaluate() override { return -right->evaluate(); }
+    int evaluate(Environment& environment) override {
+        return -right->evaluate(environment);
+    }
 
 };
 
@@ -63,13 +74,13 @@ public:
     CompoundExpr(ExprPtr l, TokenType op, ExprPtr r)
         : left(l), op(op), right(r) {}
 
-    int evaluate() override {
+    int evaluate(Environment& environment) override {
         switch(op) {
-        case PLUS: return left->evaluate() + right ->evaluate();
-        case MINUS: return left->evaluate() - right ->evaluate();
-        case MULTIPLY: return left->evaluate() * right ->evaluate();
-        case DEVIDE: return left->evaluate() / right ->evaluate();
-        case POWER: return pow(left->evaluate(), right->evaluate());
+        case PLUS: return left->evaluate(environment) + right->evaluate(environment);
+        case MINUS: return left->evaluate(environment) - right->evaluate(environment);
+        case MULTIPLY: return left->evaluate(environment) * right->evaluate(environment);
+        case DEVIDE: return left->evaluate(environment) / right->evaluate(environment);
+        case POWER: return pow(left->evaluate(environment), right->evaluate(environment));
         }
     }
 };
@@ -81,8 +92,8 @@ public:
 
     GroupingExpr(ExprPtr e) : expr(e) {}
 
-    int evaluate() override {
-        return expr->evaluate();
+    int evaluate(Environment& environment) override {
+        return expr->evaluate(environment);
     }
 };
 

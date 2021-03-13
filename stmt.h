@@ -2,10 +2,14 @@
 #define STMT_H
 
 #include <memory>
+#include <QHash>
+#include <QString>
 #include "token.h"
 #include "expr.h"
 
 using namespace std;
+
+typedef QHash<QString, int> Environment;
 
 class Stmt
 {
@@ -13,7 +17,7 @@ public:
 
     Stmt() {}
 
-    // virtual void execute() = 0;
+    virtual void execute(Environment &environment, int& pc) = 0;
 
 };
 
@@ -28,7 +32,7 @@ public:
 
     RemarkStmt(TokenPtr remark) : remark(remark) {}
 
-    // void execute() override {}
+    void execute(Environment &environment, int& pc) override {}
 
 };
 
@@ -42,6 +46,10 @@ public:
     LetStmt(TokenPtr variable, ExprPtr initializer)
         : variable(variable), initializer(initializer) {}
 
+    void execute(Environment &environment, int& pc) override {
+        environment[variable->lexeme] = initializer->evaluate(environment);
+    }
+
 };
 
 
@@ -53,6 +61,13 @@ public:
 
     PrintStmt(ExprPtr expr) : expression(expr) {}
 
+
+    // to be revised
+
+    void execute(Environment &environment, int& pc) override {
+        qDebug() << expression->evaluate(environment) << Qt::endl;
+    }
+
 };
 
 class InputStmt : public Stmt
@@ -63,6 +78,10 @@ public:
 
     InputStmt(TokenPtr variable) : variable(variable) {}
 
+    // to be revised
+
+    void execute(Environment &environment, int& pc) override {}
+
 };
 
 class GotoStmt : public Stmt
@@ -72,6 +91,16 @@ public:
     TokenPtr line;
 
     GotoStmt(TokenPtr line) : line(line) {}
+
+    void execute(Environment &environment, int& pc) override {
+
+        bool ok;
+        int lineNumber = (line->lexeme).toInt(&ok, 0);
+        if (!ok)
+            throw RunTimeError("Invalid line number.");
+
+        pc = lineNumber;
+    }
 
 };
 
@@ -87,6 +116,25 @@ public:
     IfStmt(ExprPtr left, TokenType comparison, ExprPtr right, TokenPtr line)
         : left(left), comparison(comparison), right(right), line(line) {}
 
+    void execute(Environment &environment, int& pc) override {
+
+        int valL = left->evaluate(environment), valR = right->evaluate(environment);
+
+        bool condition;
+
+        switch (comparison) {
+        case LESS: condition = (valL < valR); break;
+        case GREATER: condition = (valL > valR); break;
+        case EQUAL: condition = (valL == valR);
+        }
+
+        if (condition) {
+            StmtPtr goTo = make_shared<GotoStmt>(line);
+            goTo->execute(environment, pc);
+        }
+
+    }
+
 };
 
 class EndStmt : public Stmt
@@ -94,6 +142,10 @@ class EndStmt : public Stmt
 public:
 
     EndStmt() {}
+
+    void execute(Environment &environment, int& pc) override {
+        environment.clear();
+    }
 
 };
 

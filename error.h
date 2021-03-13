@@ -23,5 +23,10 @@ public:
     ParseError(QString m) : Error(m) {}
 };
 
+class RunTimeError : public Error
+{
+public:
+    RunTimeError(QString m) : Error(m) {}
+};
 
 #endif // ERROR_H

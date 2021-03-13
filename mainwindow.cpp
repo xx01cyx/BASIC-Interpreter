@@ -79,12 +79,14 @@ void MainWindow::on_pushButton_run_clicked()
 
         Parser* parser = new Parser(scanner->tokens);
         parser->parse();
+
+        Interpreter* interpreter = new Interpreter(parser->statements);
+        interpreter->interpret();
+
     } catch (Error e) {
         qDebug() << e.message << Qt::endl;
+        exit(-1);
     }
-
-    //    Interpreter* interpreter = new Interpreter(parser->expressions);
-    //    interpreter->interpret();
 
     for (auto line : scanner->tokens) {
         ui->textBrowser_result->append(QString::number(line.first));
@@ -100,3 +102,4 @@ void MainWindow::on_pushButton_run_clicked()
 //        ui->textBrowser_result->append(QString::number(parseResult));
 //    }
 }
+

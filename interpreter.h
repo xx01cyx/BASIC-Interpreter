@@ -2,20 +2,27 @@
 #define IMPLEMENTER_H
 
 #include <memory>
+#include <QString>
 #include "expr.h"
+#include "stmt.h"
+
+using namespace std;
 
 class Interpreter
 {
 private:
 
-    map<int, ExprPtr> expressions;
-
+    map<int, StmtPtr> statements;
+    int pc;
 
 public:
 
+    Environment environment;
+
     map<int, int> parserTester;
 
-    Interpreter(map<int, ExprPtr>& exprs);
+    Interpreter(map<int, StmtPtr>& stmts);
+
     void interpret();
 
 };
