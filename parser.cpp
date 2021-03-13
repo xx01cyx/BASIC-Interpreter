@@ -4,26 +4,29 @@
 Parser::Parser(map<int, shared_ptr<Tokens>> &tokens)
 {
     this->tokens = tokens;
-    mapIt = this->tokens.cbegin();
-    tokenIt = mapIt->second->cbegin();
+    lineIt = this->tokens.cbegin();
+    tokenIt = lineIt->second->cbegin();
     statements = map<int, StmtPtr>();
 
 }
 
 void Parser::parse()
 {
-    while (mapIt != tokens.cend()) {
-
-        parseLine();
-
-        mapIt++;
+    try {
+        while (lineIt != tokens.cend()) {
+            parseLine();
+            lineIt++;
+        }
+    } catch (Error e) {
+        qDebug() << "[Line " + QString::number(lineIt->first)
+                    + "]: " + e.message;
     }
 }
 
 void Parser::parseLine()
 {
-    int currentLine = mapIt->first;
-    tokenIt = mapIt->second->cbegin();
+    int currentLine = lineIt->first;
+    tokenIt = lineIt->second->cbegin();
 
     statements[currentLine] = statement();
 
@@ -32,7 +35,7 @@ void Parser::parseLine()
 
 StmtPtr Parser::statement()
 {
-    int currentLine = mapIt->first;
+    int currentLine = lineIt->first;
 
     if (match(REM))
         return remark();
@@ -49,7 +52,7 @@ StmtPtr Parser::statement()
     if (match(END))
         return end();
 
-    throw ParseError("Invalid statement at line " + QString::number(currentLine) + ".");
+    throw ParseError("Invalid statement.");
 
 }
 
@@ -66,11 +69,8 @@ StmtPtr Parser::remark()
 
 StmtPtr Parser::let()
 {
-    if (!match(IDENTIFIER)) {
-        int currentLine = mapIt->first;
-        throw ParseError("Expect a variable name as a left value at line "
-                         + QString::number(currentLine) + ".");
-    }
+    if (!match(IDENTIFIER))
+        throw ParseError("Expect a variable name as a left value.");
 
     TokenPtr variable = previous();
     ExprPtr initializer = nullptr;
@@ -92,11 +92,8 @@ StmtPtr Parser::print()
 
 StmtPtr Parser::input()
 {
-    if (!match(IDENTIFIER)) {
-        int currentLine = mapIt->first;
-        throw ParseError("Expect a variable name after INPUT at line "
-                         + QString::number(currentLine) + ".");
-    }
+    if (!match(IDENTIFIER))
+        throw ParseError("Expect a variable name after INPUT.");
 
     TokenPtr variable = previous();
 
@@ -106,11 +103,8 @@ StmtPtr Parser::input()
 
 StmtPtr Parser::goTo()
 {
-    if (!match(NUMBER)) {
-        int currentLine = mapIt->first;
-        throw ParseError("Expect a line number after GOTO at line "
-                         + QString::number(currentLine) + ".");
-    }
+    if (!match(NUMBER))
+        throw ParseError("Expect a line number after GOTO.");
 
     TokenPtr line = previous();
 
@@ -120,27 +114,19 @@ StmtPtr Parser::goTo()
 
 StmtPtr Parser::ifThen()
 {
-    int currentLine = mapIt->first;
-
     ExprPtr left = expression();
 
-    if (!(match(LESS) || match(EQUAL) || match(GREATER))) {
-        throw ParseError("Expect comparison after IF at line "
-                         + QString::number(currentLine) + ".");
-    }
+    if (!(match(LESS) || match(EQUAL) || match(GREATER)))
+        throw ParseError("Expect comparison after IF.");
 
     TokenType comparison = previous()->type;
     ExprPtr right = expression();
 
-    if (!match(THEN)) {
-        throw ParseError("Expect THEN in IF statement at line "
-                         + QString::number(currentLine) + ".");
-    }
+    if (!match(THEN))
+        throw ParseError("Expect THEN in IF statement.");
 
-    if (!match(NUMBER)) {
-        throw ParseError("Expect a line number after THEN at line "
-                         + QString::number(currentLine) + ".");
-    }
+    if (!match(NUMBER))
+        throw ParseError("Expect a line number after THEN.");
 
     TokenPtr line = previous();
 
@@ -210,7 +196,7 @@ ExprPtr Parser::unary()
 
 ExprPtr Parser::primary()
 {
-    int currentLine = mapIt->first;
+    int currentLine = lineIt->first;
 
     if (match(NUMBER))
         return make_shared<ConstantExpr>(previous()->lexeme.toInt());
@@ -219,11 +205,11 @@ ExprPtr Parser::primary()
     if (match(LEFT_PAREN)) {
         ExprPtr expr = expression();
         if (!match(RIGHT_PAREN))
-            throw ParseError("Expect ')' at line " + QString::number(currentLine) + ".");
+            throw ParseError("Expect ')'.");
         return expr;
     }
 
-    throw ParseError("Unexpected character at line " + QString::number(currentLine) + ".");
+    throw ParseError("Unexpected token.");
 }
 
 
@@ -239,13 +225,13 @@ bool Parser::match(TokenType type)
 
 bool Parser::endOfLine()
 {
-    return tokenIt == mapIt->second->cend();
+    return tokenIt == lineIt->second->cend();
 }
 
 
 void Parser::advance()
 {
-    shared_ptr<Tokens> lineTokens = mapIt->second;
+    shared_ptr<Tokens> lineTokens = lineIt->second;
 
     if (!endOfLine())
         tokenIt++;

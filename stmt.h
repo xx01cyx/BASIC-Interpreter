@@ -4,6 +4,7 @@
 #include <memory>
 #include <QHash>
 #include <QString>
+#include "mainwindow.h"
 #include "token.h"
 #include "expr.h"
 
@@ -13,9 +14,13 @@ typedef QHash<QString, int> Environment;
 
 class Stmt
 {
+protected:
+
+    MainWindow* window;
+
 public:
 
-    Stmt() {}
+    Stmt() { window = MainWindow::getInstance(); }
 
     virtual void execute(Environment &environment, int& pc) = 0;
 
@@ -65,7 +70,9 @@ public:
     // to be revised
 
     void execute(Environment &environment, int& pc) override {
-        qDebug() << expression->evaluate(environment) << Qt::endl;
+//        qDebug() << expression->evaluate(environment) << Qt::endl;
+        int result = expression->evaluate(environment);
+        window->printResult(QString::number(result));
     }
 
 };

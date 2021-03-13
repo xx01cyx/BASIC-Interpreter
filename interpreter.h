@@ -19,10 +19,7 @@ public:
 
     Environment environment;
 
-    map<int, int> parserTester;
-
     Interpreter(map<int, StmtPtr>& stmts);
-
     void interpret();
 
 };

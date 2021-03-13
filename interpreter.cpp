@@ -5,7 +5,6 @@ Interpreter::Interpreter(map<int, StmtPtr>& stmts)
 {
     statements = stmts;
     environment = Environment();
-    parserTester = map<int, int>();
     pc = stmts.begin()->first;
 }
 
@@ -27,8 +26,7 @@ void Interpreter::interpret()
 
         }
     } catch (Error e) {
-        qDebug() << "Line " + QString::number(pc) + ": "
-                    + e.message << Qt::endl;
-        exit(-1);
+        qDebug() << "[Line " + QString::number(pc) + "]: "
+                    + e.message;
     }
 }

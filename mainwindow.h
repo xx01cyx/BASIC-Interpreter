@@ -2,10 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "filter.h"
-#include "scanner.h"
-#include "parser.h"
-#include "interpreter.h"
+#include <QFileDialog>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -15,23 +12,31 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    Filter* filter;
-
-    void displayCode();
-    void readFile(QString);
-    QString openFile();
-
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+
+    static MainWindow* getInstance();
+
+    QString openFile();
+    void appendCode(QString code);
+    void printResult(QString result);
 
 private slots:
     void on_pushButton_load_clicked();
+    void on_pushButton_run_clicked();
     void on_lineEdit_command_returnPressed();
 
-    void on_pushButton_run_clicked();
+signals:
+    void load();
+    void run();
 
 private:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+    static MainWindow* window;
+
     Ui::MainWindow *ui;
+
 };
+
 #endif // MAINWINDOW_H

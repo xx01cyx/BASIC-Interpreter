@@ -23,7 +23,7 @@ public:
 private:
 
     map<int, shared_ptr<Tokens>> tokens;
-    map<int, shared_ptr<Tokens>>::const_iterator mapIt;
+    map<int, shared_ptr<Tokens>>::const_iterator lineIt;
     vector<TokenPtr>::const_iterator tokenIt;
 
     void parseLine();

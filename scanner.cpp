@@ -22,9 +22,14 @@ Scanner::Scanner(map<int, QString>& lines)
 
 void Scanner::scan()
 {   
-    while (lineIt != lines.cend()) {
-        scanLine();
-        lineIt++;
+    try {
+        while (lineIt != lines.cend()) {
+            scanLine();
+            lineIt++;
+        }
+    } catch (Error e) {
+        qDebug() << "[Line " + QString::number(lineIt->first)
+                    + "]: " + e.message;
     }
 }
 
@@ -73,6 +78,8 @@ void Scanner::scanToken()
             scanNumber();
         else if (isalpha(c))
             scanIdentifier();
+        else
+            throw SyntaxError("Unexpected character.");
     }
 }
 

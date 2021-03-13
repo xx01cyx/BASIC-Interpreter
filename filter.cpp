@@ -4,9 +4,32 @@
 Filter::Filter()
 {
     lines = map<int, QString>();
+    window = MainWindow::getInstance();
 }
 
-void Filter::filterCode(QString line)
+void Filter::filter(QString filename)
+{
+    if (!filename.isEmpty()){
+
+        QFile file(filename);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+            return;
+
+        QTextStream in(&file);
+
+        try {
+            QString line = in.readLine().trimmed();
+            while (!line.isNull()) {
+                this->filterLine(line);
+                line = in.readLine();
+            }
+        } catch (SyntaxError e) {
+            qDebug() << e.message;
+        }
+    }
+}
+
+void Filter::filterLine(QString line)
 {
     int lineNumber = getLineNumber(line);
 
@@ -37,3 +60,15 @@ int Filter::getLineNumber(QString line)
 
     return lineNumber;
 }
+
+void Filter::displayCode()
+{
+    auto lineIt = lines.cbegin();
+
+    while (lineIt != lines.cend()) {
+        window->appendCode(lineIt->second);
+        lineIt++;
+    }
+}
+
+

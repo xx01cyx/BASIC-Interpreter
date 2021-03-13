@@ -2,16 +2,13 @@
 #include "ui_mainwindow.h"
 
 #include <QApplication>
-#include <QFileDialog>
 #include <QDebug>
-#include "error.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    filter = new Filter();
 }
 
 MainWindow::~MainWindow()
@@ -19,58 +16,23 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+MainWindow* MainWindow::window = nullptr;
+
+MainWindow* MainWindow::getInstance()
+{
+    if (window == nullptr)
+        window = new MainWindow();
+    return window;
+}
+
 void MainWindow::on_pushButton_load_clicked()
 {
-    QString filename = openFile();
-    if (!filename.isEmpty())
-        readFile(filename);
-
-    auto lineIt = filter->lines.cbegin();
-
-    while (lineIt != filter->lines.cend()) {
-        ui->textBrowser_code->append(lineIt->second);
-        lineIt++;
-    }
-
+    emit load();
 }
 
-
-void MainWindow::readFile(QString filename)
+void MainWindow::on_pushButton_run_clicked()
 {
-    QFile file(filename);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return;
-
-    QTextStream in(&file);
-
-    try {
-        QString line = in.readLine().trimmed();
-        while (!line.isNull()) {
-            filter->filterCode(line);
-            line = in.readLine();
-        }
-    } catch (SyntaxError e) {
-        qDebug() << e.message;
-    }
-
-    //scanner->setCode(code);
-
-}
-
-QString MainWindow::openFile()
-{
-    QString filename =  QFileDialog::getOpenFileName(
-          this,
-          "Open Document",
-          QDir::currentPath(),
-          "All files (*.*) ;; Document files (*.doc *.rtf);; PNG files (*.png)");
-
-    if( !filename.isNull() )
-    {
-        return filename.toUtf8();
-    }
-
-    return "";
+    emit run();
 }
 
 void MainWindow::on_lineEdit_command_returnPressed()
@@ -80,35 +42,27 @@ void MainWindow::on_lineEdit_command_returnPressed()
     ui->lineEdit_command->clear();
 }
 
-void MainWindow::on_pushButton_run_clicked()
+QString MainWindow::openFile()
 {
-    try {
-        Scanner* scanner = new Scanner(filter->lines);
-        scanner->scan();
+    QString filename =  QFileDialog::getOpenFileName(
+          this,
+          "Open Document",
+          QDir::currentPath(),
+          "All files (*.*) ;; Document files (*.doc *.rtf);; PNG files (*.png)"
+    );
 
-        Parser* parser = new Parser(scanner->tokens);
-        parser->parse();
+    if(!filename.isNull() )
+        return filename.toUtf8();
 
-        Interpreter* interpreter = new Interpreter(parser->statements);
-        interpreter->interpret();
-
-        for (auto line : scanner->tokens) {
-            ui->textBrowser_result->append(QString::number(line.first));
-            auto lineTokens = line.second;
-            for (auto token : *(lineTokens))
-                ui->textBrowser_result->append(token->toString());
-        }
-
-    } catch (Error e) {
-        qDebug() << e.message << Qt::endl;
-        exit(-1);
-    }
-
-
-//    for (auto line : interpreter->parserTester) {
-//        ui->textBrowser_result->append(QString::number(line.first));
-//        int parseResult = line.second;
-//        ui->textBrowser_result->append(QString::number(parseResult));
-//    }
+    return "";
 }
 
+void MainWindow::appendCode(QString code)
+{
+    ui->textBrowser_code->append(code);
+}
+
+void MainWindow::printResult(QString result)
+{
+    ui->textBrowser_result->append(result);
+}
