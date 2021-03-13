@@ -22,6 +22,10 @@ private:
 private slots:
     void loadProgram();
     void runProgram();
+    void clearProgram();
+    void enterCommand(QString);
+    void getHelp();
+    void quitInterpreter();
 
 public:
     Basic();

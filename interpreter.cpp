@@ -14,16 +14,20 @@ void Interpreter::interpret()
 
     try {
         while (stmtIt != statements.cend()) {
-
             pc = stmtIt->first;
             StmtPtr stmt = stmtIt->second;
             stmt->execute(environment, pc);
 
-            if (pc != stmtIt->first)
-                stmtIt = statements.find(pc);
+            if (pc != stmtIt->first) {
+                auto tmpIt = statements.find(pc);
+                if (tmpIt == statements.cend()) {
+                    pc = stmtIt -> first;
+                    throw RunTimeError("Target line doesn't exist.");
+                } else
+                    stmtIt = tmpIt;
+            }
             else
                 stmtIt++;
-
         }
     } catch (Error e) {
         qDebug() << "[Line " + QString::number(pc) + "]: "

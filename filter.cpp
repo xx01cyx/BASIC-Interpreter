@@ -5,6 +5,14 @@ Filter::Filter()
 {
     lines = map<int, QString>();
     window = MainWindow::getInstance();
+    commands = {
+        { "RUN", RUN },
+        { "LOAD", LOAD },
+        { "LIST", LIST },
+        { "CLEAR", CLEAR },
+        { "HELP", HELP },
+        { "QUIT", QUIT },
+    };
 }
 
 void Filter::filter(QString filename)
@@ -31,23 +39,26 @@ void Filter::filter(QString filename)
 
 void Filter::filterLine(QString line)
 {
-    int lineNumber = getLineNumber(line);
+    int lineNumber = getLineNumber(line, true);
 
     if (lines.count(lineNumber))
-        throw SyntaxError("Duplicate line number!");
+        throw SyntaxError("Duplicate line number.");
 
     lines[lineNumber] = line;
 }
 
-int Filter::getLineNumber(QString line)
+int Filter::getLineNumber(QString line, bool isProgram)
 {
     int current = 0, n = line.length();
     char c = line[current].unicode();
 
     if (!isdigit(c))
-        throw SyntaxError("No line number!");
+        if (isProgram)
+            throw SyntaxError("Line number is missing.");
+        else
+            return -1;
 
-    while (current != n && isdigit(c)) {
+    while (current != n && c != ' ') {
         current++;
         c = line[current].unicode();
     }
@@ -55,10 +66,47 @@ int Filter::getLineNumber(QString line)
     bool ok;
     int lineNumber = line.mid(0, current).toInt(&ok, 10);
 
-    if (!ok)
-        throw SyntaxError("Invalid line number!");
+    if (!ok || lineNumber <= 0)
+        throw SyntaxError("Invalid line number.");
 
     return lineNumber;
+}
+
+void Filter::filterCmd(QString cmd)
+{
+    int lineNumber = getLineNumber(cmd, false);
+
+    // Basic program
+
+    if (lineNumber > 0) {
+        lines[lineNumber] = cmd;
+        displayCode();
+        return;
+    }
+
+    // Control commands
+
+    try {
+        if (!commands.count(cmd))
+            throw CommandError("Invalid command.");
+
+        Command command = commands[cmd];
+        executeCommand(command);
+
+    } catch (Error e) {
+        qDebug() << e.message;
+    }
+}
+
+void Filter::executeCommand(Command command)
+{
+    switch (command) {
+        case RUN: emit run(); break;
+        case LOAD: emit load(); break;
+        case CLEAR: emit clear(); break;
+        case HELP: emit help(); break;
+        case QUIT: emit quit(); break;
+    }
 }
 
 void Filter::displayCode()

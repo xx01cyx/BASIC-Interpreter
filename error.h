@@ -29,4 +29,10 @@ public:
     RunTimeError(QString m) : Error(m) {}
 };
 
+class CommandError : public Error
+{
+public:
+    CommandError(QString m) : Error(m) {}
+};
+
 #endif // ERROR_H

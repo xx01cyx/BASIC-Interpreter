@@ -7,6 +7,12 @@ Basic::Basic()
 
     connect(window, SIGNAL(load()), this, SLOT(loadProgram()));
     connect(window, SIGNAL(run()), this, SLOT(runProgram()));
+    connect(window, SIGNAL(command(QString)), this, SLOT(enterCommand(QString)));
+    connect(filter, SIGNAL(run()), this, SLOT(runProgram()));
+    connect(filter, SIGNAL(load()), this, SLOT(loadProgram()));
+    connect(filter, SIGNAL(clear()), this, SLOT(clearProgram()));
+    connect(filter, SIGNAL(help()), this, SLOT(getHelp()));
+    connect(filter, SIGNAL(quit()), this, SLOT(quitInterpreter()));
 }
 
 Basic::~Basic()
@@ -30,6 +36,9 @@ void Basic::loadProgram()
 
 void Basic::runProgram()
 {
+    if (!window->checkRun())
+        return;
+
     Scanner* scanner = new Scanner(filter->lines);
     scanner->scan();
 
@@ -39,4 +48,25 @@ void Basic::runProgram()
     Interpreter* interpreter = new Interpreter(parser->statements);
     interpreter->interpret();
 }
+
+void Basic::clearProgram()
+{
+    window->clearText();
+}
+
+void Basic::enterCommand(QString cmd)
+{
+    filter->filterCmd(cmd);
+}
+
+void Basic::getHelp()
+{
+    window->helpInfo();
+}
+
+void Basic::quitInterpreter()
+{
+    exit(0);
+}
+
 
