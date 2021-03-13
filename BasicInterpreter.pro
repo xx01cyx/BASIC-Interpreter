@@ -10,18 +10,18 @@ CONFIG += c++11
 
 SOURCES += \
     error.cpp \
-    expr.cpp \
+    filter.cpp \
     interpreter.cpp \
     main.cpp \
     mainwindow.cpp \
     parser.cpp \
     scanner.cpp \
-    stmt.cpp \
     token.cpp
 
 HEADERS += \
     error.h \
     expr.h \
+    filter.h \
     interpreter.h \
     mainwindow.h \
     parser.h \

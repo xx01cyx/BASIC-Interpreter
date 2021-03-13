@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    scanner = new Scanner();
+    filter = new Filter();
 }
 
 MainWindow::~MainWindow()
@@ -19,16 +19,19 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::displayCode()
-{
-    ui->textBrowser_code->setText(scanner->getCode());
-}
-
 void MainWindow::on_pushButton_load_clicked()
 {
     QString filename = openFile();
     if (!filename.isEmpty())
         readFile(filename);
+
+    auto lineIt = filter->lines.cbegin();
+
+    while (lineIt != filter->lines.cend()) {
+        ui->textBrowser_code->append(lineIt->second);
+        lineIt++;
+    }
+
 }
 
 
@@ -39,10 +42,19 @@ void MainWindow::readFile(QString filename)
         return;
 
     QTextStream in(&file);
-    QString code = in.readAll();
-    ui->textBrowser_code->setText(code);
-    scanner->setCode(code);
-    this->displayCode();
+
+    try {
+        QString line = in.readLine().trimmed();
+        while (!line.isNull()) {
+            filter->filterCode(line);
+            line = in.readLine();
+        }
+    } catch (SyntaxError e) {
+        qDebug() << e.message;
+    }
+
+    //scanner->setCode(code);
+
 }
 
 QString MainWindow::openFile()
@@ -65,16 +77,13 @@ void MainWindow::on_lineEdit_command_returnPressed()
 {
     QString code = ui->lineEdit_command->text();
 
-    scanner->insertCode(code);
-
-    this->displayCode();
-
     ui->lineEdit_command->clear();
 }
 
 void MainWindow::on_pushButton_run_clicked()
 {
     try {
+        Scanner* scanner = new Scanner(filter->lines);
         scanner->scan();
 
         Parser* parser = new Parser(scanner->tokens);
@@ -83,16 +92,16 @@ void MainWindow::on_pushButton_run_clicked()
         Interpreter* interpreter = new Interpreter(parser->statements);
         interpreter->interpret();
 
+        for (auto line : scanner->tokens) {
+            ui->textBrowser_result->append(QString::number(line.first));
+            auto lineTokens = line.second;
+            for (auto token : *(lineTokens))
+                ui->textBrowser_result->append(token->toString());
+        }
+
     } catch (Error e) {
         qDebug() << e.message << Qt::endl;
         exit(-1);
-    }
-
-    for (auto line : scanner->tokens) {
-        ui->textBrowser_result->append(QString::number(line.first));
-        auto lineTokens = line.second;
-        for (auto token : *(lineTokens))
-            ui->textBrowser_result->append(token->toString());
     }
 
 

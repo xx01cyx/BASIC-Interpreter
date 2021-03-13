@@ -11,10 +11,10 @@ public:
     Error(QString m) : message(m) {}
 };
 
-class GrammarError : public Error
+class SyntaxError : public Error
 {
 public:
-    GrammarError(QString m) : Error(m) {}
+    SyntaxError(QString m) : Error(m) {}
 };
 
 class ParseError : public Error

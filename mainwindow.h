@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "filter.h"
 #include "scanner.h"
 #include "parser.h"
 #include "interpreter.h"
@@ -14,7 +15,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    Scanner* scanner;
+    Filter* filter;
 
     void displayCode();
     void readFile(QString);

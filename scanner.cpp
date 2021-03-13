@@ -1,9 +1,12 @@
 #include "scanner.h"
 
-Scanner::Scanner()
+Scanner::Scanner(map<int, QString>& lines)
 {
-    code = "";
+    this->lines = lines;
+    lineIt = this->lines.cbegin();
+    tokens = map<int, shared_ptr<Tokens>>();
     current = 0;
+
     keywords = {
         { "REM", REM },
         { "LET", LET },
@@ -16,131 +19,108 @@ Scanner::Scanner()
     };
 }
 
-void Scanner::setCode(QString code)
-{
-    this->code = code;
-}
-
-void Scanner::insertCode(QString newCode)
-{
-    this->code += ("\n" + newCode);
-}
-
-QString Scanner::getCode()
-{
-    return this->code;
-}
 
 void Scanner::scan()
-{
-    int n = code.length();
-
-    while (current != n)
+{   
+    while (lineIt != lines.cend()) {
         scanLine();
+        lineIt++;
+    }
 }
 
 void Scanner::scanLine()
 {
-    char c = peek();
-    if (!isdigit(c))
-        throw GrammarError("A line number at the beginning of each line is missing.");
+    int lineNumber = lineIt->first;
+    QString code = lineIt->second;
+    int n = code.length();
 
-    int lineNumber = getLineNumber();
+    if (!code.startsWith(QString::number(lineNumber)))
+        throw SyntaxError("Unmatching line number.");
 
-    while (peek() != '\n' && peek() != '\0')
-        scanToken(lineNumber);
+    tokens[lineNumber] = make_shared<Tokens>(vector<TokenPtr>());
 
-    while (peek() == '\n')
-        advance();   // Skip '\n'
+    current = QString::number(lineNumber).length();
+
+    while (!isAtEnd())
+        scanToken();
 
 }
 
-int Scanner::getLineNumber()
-{
-    int start = current;
-    while (isdigit(peek()))
-        advance();
 
-    QString lineNumberStr = code.mid(start, current - start);
-    int lineNumber = lineNumberStr.toInt();
-
-    tokens[lineNumber] = make_shared<vector<shared_ptr<Token>>>();
-
-    return lineNumber;
-}
-
-void Scanner::scanToken(int lineNumber)
+void Scanner::scanToken()
 {
     char c = advance();
 
     switch (c) {
-    case '(': addToken(lineNumber, LEFT_PAREN);  break;
-    case ')': addToken(lineNumber, RIGHT_PAREN); break;
-    case '+': addToken(lineNumber, PLUS); break;
-    case '-': addToken(lineNumber, MINUS); break;
-    case '/': addToken(lineNumber, DEVIDE); break;
-    case '=': addToken(lineNumber, EQUAL); break;
-    case '<': addToken(lineNumber, LESS); break;
-    case '>': addToken(lineNumber, GREATER); break;
+    case '(': addToken(LEFT_PAREN);  break;
+    case ')': addToken(RIGHT_PAREN); break;
+    case '+': addToken(PLUS); break;
+    case '-': addToken(MINUS); break;
+    case '/': addToken(DEVIDE); break;
+    case '=': addToken(EQUAL); break;
+    case '<': addToken(LESS); break;
+    case '>': addToken(GREATER); break;
     case '*':
         if (peek() == '*') {
-            addToken(lineNumber, POWER);
+            addToken(POWER);
             advance();
         } else
-            addToken(lineNumber, MULTIPLY);
+            addToken(MULTIPLY);
         break;
     case ' ': case '\n': case '\t': case '\r': break;
     default:
         if (isdigit(c))
-            scanNumber(lineNumber);
+            scanNumber();
         else if (isalpha(c))
-            scanIdentifier(lineNumber);
+            scanIdentifier();
     }
 }
 
-void Scanner::scanNumber(int lineNumber)
+void Scanner::scanNumber()
 {
     int start = current - 1;
-    while (isdigit(peek()))
+    while (!isAtEnd() && isdigit(peek()))
         advance();
-    QString lexeme = code.mid(start, current - start);
-    addToken(lineNumber, NUMBER, lexeme);
+    QString lexeme = lineIt->second.mid(start, current - start);
+    addToken(NUMBER, lexeme);
 }
 
-void Scanner::scanIdentifier(int lineNumber)
+void Scanner::scanIdentifier()
 {
     int start = current - 1;
-    while (isalpha(peek()) || isdigit(peek()))
+    while (!isAtEnd() && (isalpha(peek()) || isdigit(peek())))
         advance();
-    QString lexeme = code.mid(start, current - start);
+    QString lexeme = lineIt->second.mid(start, current - start);
 
     if (keywords.count(lexeme)) {
         TokenType type = keywords[lexeme];
-        addToken(lineNumber, type);
+        addToken(type);
 
         if (type == REM)
-            getRemark(lineNumber);
+            getRemark();
     } else
-        addToken(lineNumber, IDENTIFIER, lexeme);
+        addToken(IDENTIFIER, lexeme);
 }
 
-void Scanner::getRemark(int lineNumber)
+void Scanner::getRemark()
 {
     int start = current;
-    while (peek() != '\n')
+    while (!isAtEnd() && peek() != '\n')
         advance();
-    QString remark = code.mid(start, current - start).trimmed();
-    addToken(lineNumber, REM_CONTENT, remark);
+    QString remark = lineIt->second.mid(start, current - start).trimmed();
+    addToken(REM_CONTENT, remark);
 }
 
-void Scanner::addToken(int lineNumber, TokenType type, QString lexeme)
+void Scanner::addToken(TokenType type, QString lexeme)
 {
+    int lineNumber = lineIt->first;
     TokenPtr token = make_shared<Token>(type, lexeme);
     tokens[lineNumber]->push_back(token);
 }
 
-void Scanner::addToken(int lineNumber, TokenType type)
+void Scanner::addToken(TokenType type)
 {
+    int lineNumber = lineIt->first;
     TokenPtr token = make_shared<Token>(type);
     tokens[lineNumber]->push_back(token);
 }
@@ -149,10 +129,15 @@ void Scanner::addToken(int lineNumber, TokenType type)
 char Scanner::advance()
 {
     current++;
-    return code[current-1].unicode();
+    return lineIt->second[current-1].unicode();
 }
 
 char Scanner::peek()
 {
-    return code[current].unicode();
+    return lineIt->second[current].unicode();
+}
+
+bool Scanner::isAtEnd()
+{
+    return current == lineIt->second.length();
 }

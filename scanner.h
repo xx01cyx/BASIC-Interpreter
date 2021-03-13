@@ -19,32 +19,28 @@ public:
 
     map<int, shared_ptr<Tokens>> tokens;
 
-    Scanner();
-
-    void setCode(QString code);
-    void insertCode(QString newCode);
-    QString getCode();
-
+    Scanner(map<int, QString>& lines);
     void scan();
 
 private:
 
-    QString code;
+    map<int, QString> lines;
+    map<int, QString>::const_iterator lineIt;
     int current;
     unordered_map<QString, TokenType> keywords;
 
     void scanLine();
-    int getLineNumber();
-    void scanToken(int lineNumber);
-    void scanNumber(int lineNumber);
-    void scanIdentifier(int lineNumber);
-    void getRemark(int lineNumber);
+    void scanToken();
+    void scanNumber();
+    void scanIdentifier();
+    void getRemark();
 
-    void addToken(int lineNumber, TokenType type, QString lexeme);
-    void addToken(int lineNumber, TokenType type);
+    void addToken(TokenType type, QString lexeme);
+    void addToken(TokenType type);
 
     char advance();
     char peek();
+    bool isAtEnd();
 };
 
 #endif // SCANNER_H
