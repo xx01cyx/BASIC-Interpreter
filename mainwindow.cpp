@@ -34,6 +34,11 @@ void MainWindow::on_pushButton_run_clicked()
     emit run();
 }
 
+void MainWindow::on_pushButton_save_clicked()
+{
+    saveFile();
+}
+
 void MainWindow::on_pushButton_clear_clicked()
 {
     clearText();
@@ -50,15 +55,36 @@ QString MainWindow::openFile()
 {
     QString filename =  QFileDialog::getOpenFileName(
           this,
-          "Open Document",
+          "Open File",
           QDir::currentPath(),
-          "All files (*.*) ;; Document files (*.doc *.rtf);; PNG files (*.png)"
+          "All files (*.*) ;; "
+          "Document files (*.doc *.rtf);; "
+          "PNG files (*.png)"
     );
 
     if(!filename.isNull() )
         return filename.toUtf8();
 
     return "";
+}
+
+void MainWindow::saveFile()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    tr("Save File"),
+                                                    QDir::currentPath(),
+                                                    tr("BASIC Files (*.basic);;"
+                                                       "Text Files (*.txt);;"
+                                                       "All Files(*.*)"));
+    QFile file(fileName);
+
+    if (file.open(QIODevice::WriteOnly|QIODevice::Text)) {
+        QTextStream stream(&file);
+        stream << ui->textBrowser_code->toPlainText();
+        stream.flush();
+        file.close();
+        QMessageBox::information(this, "Success", "File saved.", QMessageBox::Yes);
+    }
 }
 
 void MainWindow::appendCode(QString code)

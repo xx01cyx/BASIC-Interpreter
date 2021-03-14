@@ -111,6 +111,8 @@ void Filter::executeCommand(Command command)
 
 void Filter::displayCode()
 {
+    window->clearText();
+
     auto lineIt = lines.cbegin();
 
     while (lineIt != lines.cend()) {

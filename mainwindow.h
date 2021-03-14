@@ -27,6 +27,7 @@ public:
 private slots:
     void on_pushButton_load_clicked();
     void on_pushButton_run_clicked();
+    void on_pushButton_save_clicked();
     void on_pushButton_clear_clicked();
     void on_lineEdit_command_returnPressed();
 
@@ -39,6 +40,7 @@ signals:
 private:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void saveFile();
 
     static MainWindow* window;
 
