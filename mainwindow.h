@@ -23,6 +23,8 @@ public:
     void printResult(QString result);
     void clearText();
     void helpInfo();
+    QString getInput();
+    void printAST(int indent, QString content);
 
 private slots:
     void on_pushButton_load_clicked();
@@ -41,6 +43,7 @@ private:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void saveFile();
+    void waitForInput();
 
     static MainWindow* window;
 

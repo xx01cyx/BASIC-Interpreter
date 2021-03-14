@@ -4,13 +4,14 @@
 Interpreter::Interpreter(map<int, StmtPtr>& stmts)
 {
     statements = stmts;
+    stmtIt = statements.cbegin();
+    window = MainWindow::getInstance();
     environment = Environment();
-    pc = stmts.begin()->first;
 }
 
 void Interpreter::interpret()
 {
-    map<int, StmtPtr>::const_iterator stmtIt = statements.cbegin();
+    int pc;
 
     try {
         while (stmtIt != statements.cend()) {
@@ -29,8 +30,11 @@ void Interpreter::interpret()
             else
                 stmtIt++;
         }
+    } catch (EndProgram end) {
+
     } catch (Error e) {
         qDebug() << "[Line " + QString::number(pc) + "]: "
                     + e.message;
     }
 }
+

@@ -7,6 +7,7 @@
 #include "mainwindow.h"
 #include "token.h"
 #include "expr.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -20,9 +21,11 @@ protected:
 
 public:
 
-    Stmt() { window = MainWindow::getInstance(); }
+    TokenType type;
 
+    Stmt(TokenType type) : type(type) { window = MainWindow::getInstance(); }
     virtual void execute(Environment &environment, int& pc) = 0;
+    virtual void generateAST() const = 0;
 
 };
 
@@ -35,9 +38,13 @@ public:
 
     TokenPtr remark;
 
-    RemarkStmt(TokenPtr remark) : remark(remark) {}
+    RemarkStmt(TokenPtr remark) : Stmt(REM), remark(remark) {}
 
     void execute(Environment &environment, int& pc) override {}
+
+    void generateAST() const override {
+        window->printAST(1, remark->lexeme);
+    }
 
 };
 
@@ -49,12 +56,16 @@ public:
     ExprPtr initializer;
 
     LetStmt(TokenPtr variable, ExprPtr initializer)
-        : variable(variable), initializer(initializer) {}
+        : Stmt(LET), variable(variable), initializer(initializer) {}
 
     void execute(Environment &environment, int& pc) override {
         environment[variable->lexeme] = initializer->evaluate(environment);
     }
 
+    void generateAST() const override {
+        window->printAST(1, variable->lexeme);
+        initializer->generateAST(1);
+    }
 };
 
 
@@ -64,15 +75,15 @@ public:
 
     ExprPtr expression;
 
-    PrintStmt(ExprPtr expr) : expression(expr) {}
-
-
-    // to be revised
+    PrintStmt(ExprPtr expr) : Stmt(PRINT), expression(expr) {}
 
     void execute(Environment &environment, int& pc) override {
-//        qDebug() << expression->evaluate(environment) << Qt::endl;
         int result = expression->evaluate(environment);
         window->printResult(QString::number(result));
+    }
+
+    void generateAST() const override {
+        expression->generateAST(1);
     }
 
 };
@@ -83,11 +94,17 @@ public:
 
     TokenPtr variable;
 
-    InputStmt(TokenPtr variable) : variable(variable) {}
+    InputStmt(TokenPtr variable) : Stmt(INPUT), variable(variable) {}
 
     // to be revised
 
-    void execute(Environment &environment, int& pc) override {}
+    void execute(Environment &environment, int& pc) override {
+
+    }
+
+    void generateAST() const override {
+        window->printAST(1, variable->lexeme);
+    }
 
 };
 
@@ -97,16 +114,20 @@ public:
 
     TokenPtr line;
 
-    GotoStmt(TokenPtr line) : line(line) {}
+    GotoStmt(TokenPtr line) : Stmt(GOTO), line(line) {}
 
     void execute(Environment &environment, int& pc) override {
 
         bool ok;
         int lineNumber = (line->lexeme).toInt(&ok, 0);
-        if (!ok)
+        if (!ok || lineNumber <= 0)
             throw RunTimeError("Invalid line number.");
 
         pc = lineNumber;
+    }
+
+    void generateAST() const override {
+        window->printAST(1, line->lexeme);
     }
 
 };
@@ -121,7 +142,7 @@ public:
     TokenPtr line;
 
     IfStmt(ExprPtr left, TokenType comparison, ExprPtr right, TokenPtr line)
-        : left(left), comparison(comparison), right(right), line(line) {}
+        : Stmt(IF), left(left), comparison(comparison), right(right), line(line) {}
 
     void execute(Environment &environment, int& pc) override {
 
@@ -130,30 +151,48 @@ public:
         bool condition;
 
         switch (comparison) {
-        case LESS: condition = (valL < valR); break;
-        case GREATER: condition = (valL > valR); break;
-        case EQUAL: condition = (valL == valR);
+            case LESS: condition = (valL < valR); break;
+            case GREATER: condition = (valL > valR); break;
+            case EQUAL: condition = (valL == valR);
         }
 
         if (condition) {
             StmtPtr goTo = make_shared<GotoStmt>(line);
             goTo->execute(environment, pc);
         }
-
     }
 
+    void generateAST() const override {
+
+        QString cmpStr;
+
+        switch (comparison) {
+            case LESS: cmpStr = "<"; break;
+            case GREATER: cmpStr = ">"; break;
+            case EQUAL: cmpStr = "=";
+        }
+
+        left->generateAST(1);
+        window->printAST(1, cmpStr);
+        right->generateAST(1);
+        window->printAST(1, line->lexeme);
+    }
 };
 
 class EndStmt : public Stmt
 {
 public:
 
-    EndStmt() {}
+    EndStmt() : Stmt(END) {}
 
     void execute(Environment &environment, int& pc) override {
         environment.clear();
+        throw EndProgram();
     }
 
+    void generateAST() const override {}
+
 };
+
 
 #endif // STMT_H

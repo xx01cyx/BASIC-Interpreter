@@ -7,7 +7,7 @@ Parser::Parser(map<int, shared_ptr<Tokens>> &tokens)
     lineIt = this->tokens.cbegin();
     tokenIt = lineIt->second->cbegin();
     statements = map<int, StmtPtr>();
-
+    window = MainWindow::getInstance();
 }
 
 void Parser::parse()
@@ -30,6 +30,29 @@ void Parser::parseLine()
 
     statements[currentLine] = statement();
 
+    printLineAST(currentLine);
+}
+
+void Parser::printLineAST(int lineNumber)
+{
+    auto stmtIt = statements.find(lineNumber);
+
+    QString stmtType;
+
+    switch (stmtIt->second->type) {
+        case REM: stmtType = "REM"; break;
+        case LET: stmtType = "LET ="; break;
+        case PRINT: stmtType = "PRINT"; break;
+        case INPUT: stmtType = "INPUT"; break;
+        case GOTO: stmtType = "GOTO"; break;
+        case IF: stmtType = "IF THEN"; break;
+        case END: stmtType = "END";
+    }
+
+    QString ASTLine = QString::number(lineNumber) + " " + stmtType;
+
+    window->printAST(0, ASTLine);
+    stmtIt->second->generateAST();
 }
 
 

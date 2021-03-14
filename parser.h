@@ -4,10 +4,11 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include "mainwindow.h"
 #include "token.h"
 #include "expr.h"
 #include "stmt.h"
-#include "error.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -25,8 +26,10 @@ private:
     map<int, shared_ptr<Tokens>> tokens;
     map<int, shared_ptr<Tokens>>::const_iterator lineIt;
     vector<TokenPtr>::const_iterator tokenIt;
+    MainWindow* window;
 
     void parseLine();
+    void printLineAST(int lineNumber);
 
     StmtPtr statement();
     StmtPtr remark();

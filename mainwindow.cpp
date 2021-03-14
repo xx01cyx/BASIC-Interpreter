@@ -70,12 +70,21 @@ QString MainWindow::openFile()
 
 void MainWindow::saveFile()
 {
-    QString fileName = QFileDialog::getSaveFileName(this,
-                                                    tr("Save File"),
-                                                    QDir::currentPath(),
-                                                    tr("BASIC Files (*.basic);;"
-                                                       "Text Files (*.txt);;"
-                                                       "All Files(*.*)"));
+    QString code = ui->textBrowser_code->toPlainText();
+    if (code.isEmpty()) {
+        QMessageBox::warning(this, "Prompt", "Nothing to save.", QMessageBox::Yes);
+        return;
+    }
+
+    QString fileName = QFileDialog::getSaveFileName(
+        this,
+        "Save File",
+        QDir::currentPath(),
+        "BASIC Files (*.basic);;"
+        "Text Files (*.txt);;"
+         "All Files(*.*)"
+    );
+
     QFile file(fileName);
 
     if (file.open(QIODevice::WriteOnly|QIODevice::Text)) {
@@ -121,5 +130,16 @@ void MainWindow::clearText()
 void MainWindow::helpInfo()
 {
     QMessageBox::information(this, tr("Help"), QStringLiteral("Help Info"), QMessageBox::Ok);
+}
+
+void MainWindow::printAST(int indent, QString content)
+{
+    QString AST = "";
+
+    for (int i = 0; i < indent; ++i)
+        AST += "    ";
+    AST += content;
+
+    ui->textBrowser_tree->append(AST);
 }
 

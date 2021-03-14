@@ -10,7 +10,6 @@ CONFIG += c++11
 
 SOURCES += \
     basic.cpp \
-    error.cpp \
     filter.cpp \
     interpreter.cpp \
     main.cpp \
@@ -21,7 +20,6 @@ SOURCES += \
 
 HEADERS += \
     basic.h \
-    error.h \
     expr.h \
     filter.h \
     interpreter.h \
@@ -29,7 +27,8 @@ HEADERS += \
     parser.h \
     scanner.h \
     stmt.h \
-    token.h
+    token.h \
+    utils.h
 
 FORMS += \
     mainwindow.ui

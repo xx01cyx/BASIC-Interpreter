@@ -9,7 +9,7 @@
 #include <QTextStream>
 #include <QFileDialog>
 #include "mainwindow.h"
-#include "error.h"
+#include "utils.h"
 
 using namespace std;
 

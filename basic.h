@@ -9,7 +9,7 @@
 #include "scanner.h"
 #include "parser.h"
 #include "interpreter.h"
-#include "error.h"
+#include "utils.h"
 
 class Basic : public QObject
 {

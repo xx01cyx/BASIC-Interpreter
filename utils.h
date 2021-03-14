@@ -1,7 +1,9 @@
-#ifndef ERROR_H
-#define ERROR_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <QString>
+
+class EndProgram {};
 
 class Error
 {
@@ -35,4 +37,4 @@ public:
     CommandError(QString m) : Error(m) {}
 };
 
-#endif // ERROR_H
+#endif // UTILS_H

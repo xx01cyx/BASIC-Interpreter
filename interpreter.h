@@ -13,7 +13,8 @@ class Interpreter
 private:
 
     map<int, StmtPtr> statements;
-    int pc;
+    map<int, StmtPtr>::const_iterator stmtIt;
+    MainWindow* window;
 
 public:
 
