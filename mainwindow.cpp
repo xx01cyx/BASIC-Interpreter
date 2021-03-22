@@ -134,7 +134,27 @@ void MainWindow::clearText()
 
 void MainWindow::helpInfo()
 {
-    QMessageBox::information(this, tr("Help"), QStringLiteral("Help Info"), QMessageBox::Ok);
+    QString helpInformation = "Welcome to the BASIC Interpreter! You could see some buttons on the screen, "
+                              "which are used respectively for: \n"
+                              "LOAD: Load a BASIC file from your local explorer.\n"
+                              "RUN: Run the BASIC program displayed in the program block.\n"
+                              "SAVE: Save the BASIC program to local.\n"
+                              "CLEAR: Clear all the displayed contents.\n"
+                              "\n"
+                              "After loading your BASIC file, your codes will be displayed on the screen "
+                              "in a correct order. Running the program yields its abstract syntax tree and "
+                              "the result of the program, which are displayed on the screen severally.\n"
+                              "\n"
+                              "Besides, you could add some codes for the program or enter some commands via "
+                              "the bottom command line. The commands are listed as following:\n"
+                              "LOAD: Load a BASIC file.\n"
+                              "RUN: Run the program.\n"
+                              "CLEAR: Clear the screen.\n"
+                              "HELP: Show the help information.\n"
+                              "QUIT: Quit the interpreter.";
+
+
+    QMessageBox::information(this, tr("Help"), helpInformation, QMessageBox::Ok);
 }
 
 void MainWindow::printAST(int indent, QString content)
