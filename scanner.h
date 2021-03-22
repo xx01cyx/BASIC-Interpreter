@@ -8,6 +8,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include "mainwindow.h"
 #include "token.h"
 #include "utils.h"
 
@@ -28,6 +29,7 @@ private:
     map<int, QString>::const_iterator lineIt;
     int current;
     unordered_map<QString, TokenType> keywords;
+    MainWindow* window;
 
     void scanLine();
     void scanToken();

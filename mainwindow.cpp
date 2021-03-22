@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    programStatus = 0;
 }
 
 MainWindow::~MainWindow()
@@ -48,7 +49,10 @@ void MainWindow::on_lineEdit_command_returnPressed()
 {
     QString cmd = ui->lineEdit_command->text();
     ui->lineEdit_command->clear();
-    emit(command(cmd));
+    if (programStatus == 0)
+        emit(command(cmd));
+    else
+        emit(input(cmd));
 }
 
 QString MainWindow::openFile()
@@ -125,6 +129,7 @@ void MainWindow::clearText()
     ui->textBrowser_code->clear();
     ui->textBrowser_result->clear();
     ui->textBrowser_tree->clear();
+    ui->lineEdit_command->clear();
 }
 
 void MainWindow::helpInfo()
@@ -143,3 +148,35 @@ void MainWindow::printAST(int indent, QString content)
     ui->textBrowser_tree->append(AST);
 }
 
+int MainWindow::getProgramStatus()
+{
+    return this->programStatus;
+}
+
+void MainWindow::setProgramStatus(int status)
+{
+    this->programStatus = status;
+}
+
+void MainWindow::setCmdPrompt()
+{
+    ui->lineEdit_command->setText(" ? ");
+}
+
+void MainWindow::clearCmdPrompt()
+{
+    ui->lineEdit_command->setText("");
+}
+
+void MainWindow::on_lineEdit_command_cursorPositionChanged(int oldPos, int newPos)
+{
+    if (programStatus == 1 && newPos < 3)
+        ui->lineEdit_command->setCursorPosition(3);
+}
+
+void MainWindow::on_lineEdit_command_textChanged(const QString &text)
+{
+    int length = text.length();
+    if (programStatus == 1 && length < 3)
+        ui->lineEdit_command->setText(" ? ");
+}

@@ -13,8 +13,10 @@ using namespace std;
 
 typedef QHash<QString, int> Environment;
 
-class Stmt
+class Stmt : public QObject
 {
+    Q_OBJECT
+
 protected:
 
     MainWindow* window;
@@ -34,6 +36,8 @@ typedef shared_ptr<Stmt> StmtPtr;
 
 class RemarkStmt : public Stmt
 {
+    Q_OBJECT
+
 public:
 
     TokenPtr remark;
@@ -50,6 +54,8 @@ public:
 
 class LetStmt : public Stmt
 {
+    Q_OBJECT
+
 public:
 
     TokenPtr variable;
@@ -71,6 +77,8 @@ public:
 
 class PrintStmt : public Stmt
 {
+    Q_OBJECT
+
 public:
 
     ExprPtr expression;
@@ -90,15 +98,25 @@ public:
 
 class InputStmt : public Stmt
 {
+    Q_OBJECT
+
 public:
 
     TokenPtr variable;
+    int value;
 
-    InputStmt(TokenPtr variable) : Stmt(INPUT), variable(variable) {}
+    InputStmt(TokenPtr variable) : Stmt(INPUT), variable(variable) {
+        connect(window, SIGNAL(input(QString)), this, SLOT(getInput(QString)));
+    }
 
     // to be revised
 
     void execute(Environment &environment, int& pc) override {
+
+        window->setCmdPrompt();
+        window->loop.exec();
+
+        environment[variable->lexeme] = this->value;
 
     }
 
@@ -106,10 +124,29 @@ public:
         window->printAST(1, variable->lexeme);
     }
 
+private slots:
+
+    int getInput(QString input) {
+
+        QString valueStr = input.mid(3).trimmed();
+
+        bool ok;
+        int value = valueStr.toInt(&ok);
+        if (!ok)
+            throw RunTimeError("Invalid input.");
+
+        this->value = value;
+
+        window->loop.quit();
+        window->clearCmdPrompt();
+    }
+
 };
 
 class GotoStmt : public Stmt
 {
+    Q_OBJECT
+
 public:
 
     TokenPtr line;
@@ -134,6 +171,8 @@ public:
 
 class IfStmt : public Stmt
 {
+    Q_OBJECT
+
 public:
 
     ExprPtr left;
@@ -181,6 +220,8 @@ public:
 
 class EndStmt : public Stmt
 {
+    Q_OBJECT
+
 public:
 
     EndStmt() : Stmt(END) {}

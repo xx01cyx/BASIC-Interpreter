@@ -6,6 +6,7 @@ Scanner::Scanner(map<int, QString>& lines)
     lineIt = this->lines.cbegin();
     tokens = map<int, shared_ptr<Tokens>>();
     current = 0;
+    window = MainWindow::getInstance();
 
     keywords = {
         { "REM", REM },
@@ -30,6 +31,8 @@ void Scanner::scan()
     } catch (Error e) {
         qDebug() << "[Line " + QString::number(lineIt->first)
                     + "]: " + e.message;
+        window->setProgramStatus(0);
+        window->clearCmdPrompt();
     }
 }
 

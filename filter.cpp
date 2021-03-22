@@ -52,11 +52,12 @@ int Filter::getLineNumber(QString line, bool isProgram)
     int current = 0, n = line.length();
     char c = line[current].unicode();
 
-    if (!isdigit(c))
+    if (!isdigit(c)) {
         if (isProgram)
             throw SyntaxError("Line number is missing.");
         else
             return -1;
+    }
 
     while (current != n && c != ' ') {
         current++;

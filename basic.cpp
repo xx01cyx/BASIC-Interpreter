@@ -39,6 +39,8 @@ void Basic::runProgram()
     if (!window->checkRun())
         return;
 
+    window->setProgramStatus(1);
+
     Scanner* scanner = new Scanner(filter->lines);
     scanner->scan();
 
@@ -47,6 +49,10 @@ void Basic::runProgram()
 
     Interpreter* interpreter = new Interpreter(parser->statements);
     interpreter->interpret();
+
+    window->setProgramStatus(0);
+    window->clearCmdPrompt();
+
 }
 
 void Basic::clearProgram()

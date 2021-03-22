@@ -20,6 +20,8 @@ void Parser::parse()
     } catch (Error e) {
         qDebug() << "[Line " + QString::number(lineIt->first)
                     + "]: " + e.message;
+        window->setProgramStatus(0);
+        window->clearCmdPrompt();
     }
 }
 

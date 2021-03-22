@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QEventLoop>
+#include <QKeyEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -15,6 +17,8 @@ class MainWindow : public QMainWindow
 
 public:
 
+    QEventLoop loop;
+
     static MainWindow* getInstance();
 
     QString openFile();
@@ -25,6 +29,10 @@ public:
     void helpInfo();
     QString getInput();
     void printAST(int indent, QString content);
+    int getProgramStatus();
+    void setProgramStatus(int status);
+    void setCmdPrompt();
+    void clearCmdPrompt();
 
 private slots:
     void on_pushButton_load_clicked();
@@ -32,12 +40,16 @@ private slots:
     void on_pushButton_save_clicked();
     void on_pushButton_clear_clicked();
     void on_lineEdit_command_returnPressed();
+    void on_lineEdit_command_cursorPositionChanged(int oldPos, int newPos);
+
+    void on_lineEdit_command_textChanged(const QString &arg1);
 
 signals:
     void load();
     void run();
     void clear();
     void command(QString);
+    void input(QString);
 
 private:
     MainWindow(QWidget *parent = nullptr);
@@ -46,6 +58,7 @@ private:
     void waitForInput();
 
     static MainWindow* window;
+    int programStatus;
 
     Ui::MainWindow *ui;
 
