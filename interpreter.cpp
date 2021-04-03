@@ -33,10 +33,8 @@ void Interpreter::interpret()
     } catch (EndProgram end) {
 
     } catch (Error e) {
-        qDebug() << "[Line " + QString::number(pc) + "]: "
-                    + e.message;
-        window->setProgramStatus(0);
-        window->clearCmdPrompt();
+        QString errorMessage = "[Line " + QString::number(pc) + "]: " + e.message;
+        throw errorMessage;
     }
 }
 

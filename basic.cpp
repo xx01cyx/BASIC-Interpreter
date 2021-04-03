@@ -27,6 +27,8 @@ void Basic::run()
 
 void Basic::loadProgram()
 {
+    filter->reset();
+
     QString filename = window->openFile();
 
     filter->filter(filename);
@@ -41,14 +43,21 @@ void Basic::runProgram()
 
     window->setProgramStatus(1);
 
-    Scanner* scanner = new Scanner(filter->lines);
-    scanner->scan();
+    try {
+        Scanner* scanner = new Scanner(filter->lines);
+        scanner->scan();
 
-    Parser* parser = new Parser(scanner->tokens);
-    parser->parse();
+        Parser* parser = new Parser(scanner->tokens);
+        parser->parse();
 
-    Interpreter* interpreter = new Interpreter(parser->statements);
-    interpreter->interpret();
+        Interpreter* interpreter = new Interpreter(parser->statements);
+        interpreter->interpret();
+
+    } catch (QString errorMessage) {
+        window->printResult(errorMessage);
+        window->setProgramStatus(0);
+        window->clearCmdPrompt();
+    }
 
     window->setProgramStatus(0);
     window->clearCmdPrompt();
@@ -58,6 +67,7 @@ void Basic::runProgram()
 void Basic::clearProgram()
 {
     window->clearText();
+    filter->reset();
 }
 
 void Basic::enterCommand(QString cmd)

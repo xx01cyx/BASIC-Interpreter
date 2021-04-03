@@ -32,7 +32,7 @@ void Filter::filter(QString filename)
                 line = in.readLine();
             }
         } catch (SyntaxError e) {
-            qDebug() << e.message;
+            window->printResult(e.message);
         }
     }
 }
@@ -95,7 +95,7 @@ void Filter::filterCmd(QString cmd)
         executeCommand(command);
 
     } catch (Error e) {
-        qDebug() << e.message;
+        window->printResult(e.message);
     }
 }
 
@@ -120,6 +120,11 @@ void Filter::displayCode()
         window->appendCode(lineIt->second);
         lineIt++;
     }
+}
+
+void Filter::reset()
+{
+    lines.clear();
 }
 
 

@@ -29,6 +29,7 @@ public:
     void filter(QString filename);  // Sort the program according to line numbers
     void displayCode();
     void filterCmd(QString cmd);
+    void reset();
 
 private slots:
     void executeCommand(Command command);

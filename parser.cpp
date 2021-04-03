@@ -18,10 +18,9 @@ void Parser::parse()
             lineIt++;
         }
     } catch (Error e) {
-        qDebug() << "[Line " + QString::number(lineIt->first)
+        QString errorMessage =  "[Line " + QString::number(lineIt->first)
                     + "]: " + e.message;
-        window->setProgramStatus(0);
-        window->clearCmdPrompt();
+        throw errorMessage;
     }
 }
 
