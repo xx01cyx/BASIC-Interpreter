@@ -24,6 +24,7 @@ public:
     QString openFile();
     void appendCode(QString code);
     bool checkRun();
+    void clearResult();
     void printResult(QString result);
     void clearText();
     void helpInfo();
@@ -41,7 +42,6 @@ private slots:
     void on_pushButton_clear_clicked();
     void on_lineEdit_command_returnPressed();
     void on_lineEdit_command_cursorPositionChanged(int oldPos, int newPos);
-
     void on_lineEdit_command_textChanged(const QString &arg1);
 
 signals:

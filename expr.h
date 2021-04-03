@@ -138,5 +138,21 @@ public:
     }
 };
 
+class ErrorExpr : public Expr
+{
+public:
+    QString errorMessage;
+
+    ErrorExpr(QString errorMessage) : errorMessage(errorMessage) {}
+
+    int evaluate(Environment& environment) override {
+        throw Error(errorMessage);
+    }
+
+    void generateAST(int indent) const override {
+        window->printAST(indent, "ERROR");
+    }
+};
+
 
 #endif // EXPR_H

@@ -236,4 +236,25 @@ public:
 };
 
 
+class ErrorStmt : public Stmt
+{
+    Q_OBJECT
+
+public:
+
+    QString errorMessage;
+
+    ErrorStmt(TokenPtr error) : Stmt(ERROR), errorMessage(error->lexeme) {}
+    ErrorStmt(QString errorMessage) : Stmt(ERROR), errorMessage(errorMessage) {}
+
+    void execute(Environment &environment, int& pc) override {
+        environment.clear();
+        throw Error(errorMessage);
+    }
+
+    void generateAST() const override {}
+
+
+};
+
 #endif // STMT_H

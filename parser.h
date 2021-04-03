@@ -39,6 +39,7 @@ private:
     StmtPtr goTo();
     StmtPtr ifThen();
     StmtPtr end();
+    StmtPtr error();
 
     ExprPtr expression();
     ExprPtr term();

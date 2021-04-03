@@ -19,6 +19,8 @@ enum TokenType {
 
     EQUAL, LESS, GREATER,
 
+    ERROR,
+
 };
 
 class Token

@@ -95,6 +95,7 @@ void Filter::filterCmd(QString cmd)
         executeCommand(command);
 
     } catch (Error e) {
+        window->clearResult();
         window->printResult(e.message);
     }
 }

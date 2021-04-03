@@ -12,15 +12,9 @@ Parser::Parser(map<int, shared_ptr<Tokens>> &tokens)
 
 void Parser::parse()
 {
-    try {
-        while (lineIt != tokens.cend()) {
-            parseLine();
-            lineIt++;
-        }
-    } catch (Error e) {
-        QString errorMessage =  "[Line " + QString::number(lineIt->first)
-                    + "]: " + e.message;
-        throw errorMessage;
+    while (lineIt != tokens.cend()) {
+        parseLine();
+        lineIt++;
     }
 }
 
@@ -47,7 +41,8 @@ void Parser::printLineAST(int lineNumber)
         case INPUT: stmtType = "INPUT"; break;
         case GOTO: stmtType = "GOTO"; break;
         case IF: stmtType = "IF THEN"; break;
-        case END: stmtType = "END";
+        case END: stmtType = "END"; break;
+        case ERROR: stmtType = "ERROR";
     }
 
     QString ASTLine = QString::number(lineNumber) + " " + stmtType;
@@ -75,8 +70,10 @@ StmtPtr Parser::statement()
         return ifThen();
     if (match(END))
         return end();
+    if (match(ERROR))
+        return error();
 
-    throw ParseError("Invalid statement.");
+    return make_shared<ErrorStmt>("Invalid statement.");
 
 }
 
@@ -94,7 +91,7 @@ StmtPtr Parser::remark()
 StmtPtr Parser::let()
 {
     if (!match(IDENTIFIER))
-        throw ParseError("Expect a variable name as a left value.");
+        return make_shared<ErrorStmt>("Expect a variable name as a left value.");
 
     TokenPtr variable = previous();
     ExprPtr initializer = nullptr;
@@ -117,7 +114,7 @@ StmtPtr Parser::print()
 StmtPtr Parser::input()
 {
     if (!match(IDENTIFIER))
-        throw ParseError("Expect a variable name after INPUT.");
+        return make_shared<ErrorStmt>("Expect a variable name after INPUT.");
 
     TokenPtr variable = previous();
 
@@ -128,7 +125,7 @@ StmtPtr Parser::input()
 StmtPtr Parser::goTo()
 {
     if (!match(NUMBER))
-        throw ParseError("Expect a line number after GOTO.");
+        return make_shared<ErrorStmt>("Expect a line number after GOTO.");
 
     TokenPtr line = previous();
 
@@ -141,16 +138,16 @@ StmtPtr Parser::ifThen()
     ExprPtr left = expression();
 
     if (!(match(LESS) || match(EQUAL) || match(GREATER)))
-        throw ParseError("Expect comparison after IF.");
+        return make_shared<ErrorStmt>("Expect comparison after IF.");
 
     TokenType comparison = previous()->type;
     ExprPtr right = expression();
 
     if (!match(THEN))
-        throw ParseError("Expect THEN in IF statement.");
+        return make_shared<ErrorStmt>("Expect THEN in IF statement.");
 
     if (!match(NUMBER))
-        throw ParseError("Expect a line number after THEN.");
+        return make_shared<ErrorStmt>("Expect a line number after THEN.");
 
     TokenPtr line = previous();
 
@@ -163,6 +160,10 @@ StmtPtr Parser::end()
     return make_shared<EndStmt>();
 }
 
+StmtPtr Parser::error()
+{
+    return make_shared<ErrorStmt>(previous());
+}
 
 
 ExprPtr Parser::expression()
@@ -229,11 +230,11 @@ ExprPtr Parser::primary()
     if (match(LEFT_PAREN)) {
         ExprPtr expr = expression();
         if (!match(RIGHT_PAREN))
-            throw ParseError("Expect ')'.");
+            return make_shared<ErrorExpr>("Expect ')'.");
         return expr;
     }
 
-    throw ParseError("Unexpected token.");
+    return make_shared<ErrorExpr>("Unexpected token.");
 }
 
 

@@ -23,15 +23,9 @@ Scanner::Scanner(map<int, QString>& lines)
 
 void Scanner::scan()
 {   
-    try {
-        while (lineIt != lines.cend()) {
-            scanLine();
-            lineIt++;
-        }
-    } catch (Error e) {
-        QString errorMessage =  "[Line " + QString::number(lineIt->first)
-                    + "]: " + e.message;
-        throw errorMessage;
+    while (lineIt != lines.cend()) {
+        scanLine();
+        lineIt++;
     }
 }
 
@@ -39,10 +33,7 @@ void Scanner::scanLine()
 {
     int lineNumber = lineIt->first;
     QString code = lineIt->second;
-    int n = code.length();
-
-    if (!code.startsWith(QString::number(lineNumber)))
-        throw SyntaxError("Unmatching line number.");
+    int n = code.length();        
 
     tokens[lineNumber] = make_shared<Tokens>(vector<TokenPtr>());
 
@@ -81,7 +72,7 @@ void Scanner::scanToken()
         else if (isalpha(c))
             scanIdentifier();
         else
-            throw SyntaxError("Unexpected character.");
+            addToken(ERROR, "Unexpected character.");
     }
 }
 
@@ -90,6 +81,7 @@ void Scanner::scanNumber()
     int start = current - 1;
     while (!isAtEnd() && isdigit(peek()))
         advance();
+
     QString lexeme = lineIt->second.mid(start, current - start);
     addToken(NUMBER, lexeme);
 }
@@ -99,6 +91,7 @@ void Scanner::scanIdentifier()
     int start = current - 1;
     while (!isAtEnd() && (isalpha(peek()) || isdigit(peek())))
         advance();
+
     QString lexeme = lineIt->second.mid(start, current - start);
 
     if (keywords.count(lexeme)) {

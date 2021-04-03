@@ -119,6 +119,11 @@ bool MainWindow::checkRun()
     return runable;
 }
 
+void MainWindow::clearResult()
+{
+    ui->textBrowser_result->clear();
+}
+
 void MainWindow::printResult(QString result)
 {
     ui->textBrowser_result->append(result);

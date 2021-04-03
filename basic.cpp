@@ -43,21 +43,14 @@ void Basic::runProgram()
 
     window->setProgramStatus(1);
 
-    try {
-        Scanner* scanner = new Scanner(filter->lines);
-        scanner->scan();
+    Scanner* scanner = new Scanner(filter->lines);
+    scanner->scan();
 
-        Parser* parser = new Parser(scanner->tokens);
-        parser->parse();
+    Parser* parser = new Parser(scanner->tokens);
+    parser->parse();
 
-        Interpreter* interpreter = new Interpreter(parser->statements);
-        interpreter->interpret();
-
-    } catch (QString errorMessage) {
-        window->printResult(errorMessage);
-        window->setProgramStatus(0);
-        window->clearCmdPrompt();
-    }
+    Interpreter* interpreter = new Interpreter(parser->statements);
+    interpreter->interpret();
 
     window->setProgramStatus(0);
     window->clearCmdPrompt();
