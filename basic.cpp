@@ -7,6 +7,7 @@ Basic::Basic()
 
     connect(window, SIGNAL(load()), this, SLOT(loadProgram()));
     connect(window, SIGNAL(run()), this, SLOT(runProgram()));
+    connect(window, SIGNAL(clear()), this, SLOT(clearProgram()));
     connect(window, SIGNAL(command(QString)), this, SLOT(enterCommand(QString)));
     connect(filter, SIGNAL(run()), this, SLOT(runProgram()));
     connect(filter, SIGNAL(load()), this, SLOT(loadProgram()));
@@ -59,8 +60,8 @@ void Basic::runProgram()
 
 void Basic::clearProgram()
 {
-    window->clearText();
     filter->reset();
+    window->clearText();
 }
 
 void Basic::enterCommand(QString cmd)

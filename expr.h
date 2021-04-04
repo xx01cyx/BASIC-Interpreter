@@ -141,17 +141,12 @@ public:
 class ErrorExpr : public Expr
 {
 public:
-    QString errorMessage;
 
-    ErrorExpr(QString errorMessage) : errorMessage(errorMessage) {}
+    ErrorExpr() {}
 
-    int evaluate(Environment& environment) override {
-        throw Error(errorMessage);
-    }
+    int evaluate(Environment& environment) override {}
 
-    void generateAST(int indent) const override {
-        window->printAST(indent, "ERROR");
-    }
+    void generateAST(int indent) const override {}
 };
 
 

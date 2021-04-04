@@ -7,12 +7,14 @@ Parser::Parser(map<int, shared_ptr<Tokens>> &tokens)
     lineIt = this->tokens.cbegin();
     tokenIt = lineIt->second->cbegin();
     statements = map<int, StmtPtr>();
+    errorSign = "";
     window = MainWindow::getInstance();
 }
 
 void Parser::parse()
 {
     while (lineIt != tokens.cend()) {
+        errorSign = "";
         parseLine();
         lineIt++;
     }
@@ -24,6 +26,11 @@ void Parser::parseLine()
     tokenIt = lineIt->second->cbegin();
 
     statements[currentLine] = statement();
+
+    if (tokenIt != lineIt->second->cend())
+        statements[currentLine] = make_shared<ErrorStmt>("Expect statement.");
+    else if (errorSign.length() != 0)
+        statements[currentLine] = make_shared<ErrorStmt>(errorSign);
 
     printLineAST(currentLine);
 }
@@ -229,12 +236,16 @@ ExprPtr Parser::primary()
         return make_shared<IdentifierExpr>(previous()->lexeme);
     if (match(LEFT_PAREN)) {
         ExprPtr expr = expression();
-        if (!match(RIGHT_PAREN))
-            return make_shared<ErrorExpr>("Expect ')'.");
+        if (!match(RIGHT_PAREN)) {
+            errorSign = "Expect ')'.";
+            return make_shared<ErrorExpr>();
+        }
         return expr;
     }
 
-    return make_shared<ErrorExpr>("Unexpected token.");
+    errorSign = "Unexpected token.";
+    return make_shared<ErrorExpr>();
+
 }
 
 

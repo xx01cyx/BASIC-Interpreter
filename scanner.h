@@ -39,6 +39,7 @@ private:
 
     void addToken(TokenType type, QString lexeme);
     void addToken(TokenType type);
+    void getError(QString errorMessage);
 
     char advance();
     char peek();

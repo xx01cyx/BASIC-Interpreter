@@ -72,7 +72,7 @@ void Scanner::scanToken()
         else if (isalpha(c))
             scanIdentifier();
         else
-            addToken(ERROR, "Unexpected character.");
+            getError("Unexpected character.");
     }
 }
 
@@ -127,6 +127,13 @@ void Scanner::addToken(TokenType type)
     tokens[lineNumber]->push_back(token);
 }
 
+void Scanner::getError(QString errorMessage)
+{
+    int lineNumber = lineIt->first;
+    TokenPtr token = make_shared<Token>(ERROR, errorMessage);
+    tokens[lineNumber]->clear();
+    tokens[lineNumber]->push_back(token);
+}
 
 char Scanner::advance()
 {

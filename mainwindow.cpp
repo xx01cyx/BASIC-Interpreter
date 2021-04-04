@@ -42,7 +42,7 @@ void MainWindow::on_pushButton_save_clicked()
 
 void MainWindow::on_pushButton_clear_clicked()
 {
-    clearText();
+    emit clear();
 }
 
 void MainWindow::on_lineEdit_command_returnPressed()
