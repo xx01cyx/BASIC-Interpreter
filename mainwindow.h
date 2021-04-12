@@ -24,16 +24,18 @@ public:
     QString openFile();
     void appendCode(QString code);
     bool checkRun();
-    void clearResult();
     void printResult(QString result);
-    void clearText();
     void helpInfo();
     QString getInput();
     void printAST(int indent, QString content);
     int getProgramStatus();
     void setProgramStatus(int status);
     void setCmdPrompt();
+    void warn(QString warningMessage);
+    void clearText();
+    void clearResult();
     void clearCmdPrompt();
+    void clearAST();
 
 private slots:
     void on_pushButton_load_clicked();

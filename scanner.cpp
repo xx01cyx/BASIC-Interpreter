@@ -1,8 +1,8 @@
 #include "scanner.h"
 
-Scanner::Scanner(map<int, QString>& lines)
+Scanner::Scanner()
 {
-    this->lines = lines;
+    lines = map<int, QString>();
     lineIt = this->lines.cbegin();
     tokens = map<int, shared_ptr<Tokens>>();
     current = 0;
@@ -18,6 +18,13 @@ Scanner::Scanner(map<int, QString>& lines)
         { "THEN", THEN },
         { "END", END },
     };
+}
+
+void Scanner::setLines(map<int, QString>& lines)
+{
+    this->tokens.clear();
+    this->lines = lines;
+    lineIt = this->lines.cbegin();
 }
 
 
@@ -36,8 +43,10 @@ void Scanner::scanLine()
     int n = code.length();        
 
     tokens[lineNumber] = make_shared<Tokens>(vector<TokenPtr>());
+    current = 0;
 
-    current = QString::number(lineNumber).length();
+    while (!isAtEnd() && isdigit(peek()))  // skip line number
+        advance();
 
     while (!isAtEnd())
         scanToken();
@@ -69,7 +78,7 @@ void Scanner::scanToken()
     default:
         if (isdigit(c))
             scanNumber();
-        else if (isalpha(c))
+        else if (isalpha(c) || isunderline(c))
             scanIdentifier();
         else
             getError("Unexpected character.");
@@ -89,7 +98,7 @@ void Scanner::scanNumber()
 void Scanner::scanIdentifier()
 {
     int start = current - 1;
-    while (!isAtEnd() && (isalpha(peek()) || isdigit(peek())))
+    while (!isAtEnd() && (isalpha(peek()) || isdigit(peek()) || isunderline(peek())))
         advance();
 
     QString lexeme = lineIt->second.mid(start, current - start);
@@ -144,6 +153,11 @@ char Scanner::advance()
 char Scanner::peek()
 {
     return lineIt->second[current].unicode();
+}
+
+bool Scanner::isunderline(char c)
+{
+    return c == '_';
 }
 
 bool Scanner::isAtEnd()

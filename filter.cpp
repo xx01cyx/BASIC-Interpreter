@@ -6,6 +6,9 @@ Filter::Filter()
     lines = map<int, QString>();
     window = MainWindow::getInstance();
     commands = {
+        { "LET", LET_CMD },
+        { "PRINT", PRINT_CMD },
+        { "INPUT", INPUT_CMD },
         { "RUN", RUN },
         { "LOAD", LOAD },
         { "LIST", LIST },
@@ -25,14 +28,10 @@ void Filter::filter(QString filename)
 
         QTextStream in(&file);
 
-        try {
-            QString line = in.readLine().trimmed();
-            while (!line.isNull()) {
-                this->filterLine(line);
-                line = in.readLine();
-            }
-        } catch (SyntaxError e) {
-            window->printResult(e.message);
+        QString line = in.readLine().trimmed();
+        while (!line.isNull()) {
+            this->filterLine(line);
+            line = in.readLine();
         }
     }
 }
@@ -41,22 +40,28 @@ void Filter::filterLine(QString line)
 {
     int lineNumber = getLineNumber(line, true);
 
-    if (lines.count(lineNumber))
-        throw SyntaxError("Duplicate line number.");
-
-    lines[lineNumber] = line;
+    if (lineNumber > 0)
+        lines[lineNumber] = line;
 }
 
+
+/*
+ * If string is from command line and does not start with a number, return 0.
+ * If the line number exists, return the positive line number.
+ * If the line number exceeds 1000000 or is less than 0, return -1 on error.
+ */
 int Filter::getLineNumber(QString line, bool isProgram)
 {
     int current = 0, n = line.length();
     char c = line[current].unicode();
 
-    if (!isdigit(c)) {
-        if (isProgram)
-            throw SyntaxError("Line number is missing.");
-        else
+    if (!isdigit(c) && c != '-') {
+        if (isProgram) {
+            window->warn("Line number is missing.");
             return -1;
+        }
+        else
+            return 0;
     }
 
     while (current != n && c != ' ') {
@@ -67,8 +72,13 @@ int Filter::getLineNumber(QString line, bool isProgram)
     bool ok;
     int lineNumber = line.mid(0, current).toInt(&ok, 10);
 
-    if (!ok || lineNumber <= 0)
-        throw SyntaxError("Invalid line number.");
+    if (!ok) {
+        window->warn("Invalid line number.");
+        return -1;
+    } else if (lineNumber <= 0 || lineNumber > 1000000) {
+        window->warn("Invalid line number " + QString::number(lineNumber) + ".");
+        return -1;
+    }
 
     return lineNumber;
 }
@@ -80,6 +90,15 @@ void Filter::filterCmd(QString cmd)
     // Basic program
 
     if (lineNumber > 0) {
+
+        bool ok;
+        cmd.trimmed().toInt(&ok, 10);
+        if (ok) {
+            lines.erase(lineNumber);
+            displayCode();
+            return;
+        }
+
         lines[lineNumber] = cmd;
         displayCode();
         return;
@@ -87,22 +106,41 @@ void Filter::filterCmd(QString cmd)
 
     // Control commands
 
-    try {
-        if (!commands.count(cmd))
-            throw CommandError("Invalid command.");
+    else if (lineNumber == 0) {
 
-        Command command = commands[cmd];
-        executeCommand(command);
+        Command cmdType = judgeCmd(cmd);
 
-    } catch (Error e) {
-        window->clearResult();
-        window->printResult(e.message);
+        if (cmdType == ERROR_CMD) {
+            window->warn("Invalid command.");
+            return;
+        }
+
+        executeCommand(cmdType, cmd);
     }
+
 }
 
-void Filter::executeCommand(Command command)
+Command Filter::judgeCmd(QString cmd)
 {
-    switch (command) {
+    cmd = cmd.trimmed();
+
+    if (commands.count(cmd))
+        return commands[cmd];
+    else if (cmd.startsWith("LET"))
+        return LET_CMD;
+    else if (cmd.startsWith("INPUT"))
+        return INPUT_CMD;
+    else if (cmd.startsWith("PRINT"))
+        return PRINT_CMD;
+    else
+        return ERROR_CMD;
+}
+
+void Filter::executeCommand(Command cmdType, QString cmd)
+{
+    switch (cmdType) {
+        case PRINT_CMD: case LET_CMD: case INPUT_CMD:
+            emit cmdProgram(cmd); break;
         case RUN: emit run(); break;
         case LOAD: emit load(); break;
         case CLEAR: emit clear(); break;
@@ -127,5 +165,6 @@ void Filter::reset()
 {
     lines.clear();
 }
+
 
 

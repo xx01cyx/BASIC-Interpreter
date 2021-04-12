@@ -2,13 +2,17 @@
 
 Basic::Basic()
 {
+    global = Environment();
     window = MainWindow::getInstance();
     filter = new Filter();
+    scanner = new Scanner();
+    parser = new Parser();
 
     connect(window, SIGNAL(load()), this, SLOT(loadProgram()));
     connect(window, SIGNAL(run()), this, SLOT(runProgram()));
     connect(window, SIGNAL(clear()), this, SLOT(clearProgram()));
     connect(window, SIGNAL(command(QString)), this, SLOT(enterCommand(QString)));
+    connect(filter, SIGNAL(cmdProgram(QString)), this, SLOT(receiveCmdProgram(QString)));
     connect(filter, SIGNAL(run()), this, SLOT(runProgram()));
     connect(filter, SIGNAL(load()), this, SLOT(loadProgram()));
     connect(filter, SIGNAL(clear()), this, SLOT(clearProgram()));
@@ -24,6 +28,49 @@ Basic::~Basic()
 void Basic::run()
 {
     window->show();
+}
+
+void Basic::receiveCmdProgram(QString cmd)
+{
+    map<int, QString> cmdProgram = map<int, QString>();
+    cmdProgram[0] = cmd;
+
+    window->clearAST();
+    window->clearResult();
+
+    window->setProgramStatus(1);
+
+    scanner->setLines(cmdProgram);
+    scanner->scan();
+
+    parser->setLineTokens(scanner->tokens);
+    parser->parse(false);
+
+    interpreter = new Interpreter(this->global);
+    interpreter->setStatements(parser->statements);
+    interpreter->interpret(true);
+
+    this->global = interpreter->getGlobal();
+
+    window->setProgramStatus(0);
+    window->clearCmdPrompt();
+
+}
+
+void Basic::executeCmdProgram(StmtPtr stmt)
+{
+    Environment empty = Environment();
+    int pc = 0;
+
+    try {
+        stmt->execute(global, empty, pc, true);
+
+    } catch (Error e) {
+        QString errorMessage = "[Error]: " + e.message;
+        window->printResult(errorMessage);
+        window->setProgramStatus(0);
+        window->clearCmdPrompt();
+    }
 }
 
 void Basic::loadProgram()
@@ -44,14 +91,15 @@ void Basic::runProgram()
 
     window->setProgramStatus(1);
 
-    Scanner* scanner = new Scanner(filter->lines);
+    scanner->setLines(filter->lines);
     scanner->scan();
 
-    Parser* parser = new Parser(scanner->tokens);
-    parser->parse();
+    parser->setLineTokens(scanner->tokens);
+    parser->parse(true);
 
-    Interpreter* interpreter = new Interpreter(parser->statements);
-    interpreter->interpret();
+    interpreter = new Interpreter(global);
+    interpreter->setStatements(parser->statements);
+    interpreter->interpret(false);
 
     window->setProgramStatus(0);
     window->clearCmdPrompt();
@@ -60,6 +108,7 @@ void Basic::runProgram()
 
 void Basic::clearProgram()
 {
+    global.clear();
     filter->reset();
     window->clearText();
 }

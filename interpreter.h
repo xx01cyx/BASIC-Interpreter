@@ -15,13 +15,15 @@ private:
     map<int, StmtPtr> statements;
     map<int, StmtPtr>::const_iterator stmtIt;
     MainWindow* window;
+    Environment global;
+    Environment local;
 
 public:
 
-    Environment environment;
-
-    Interpreter(map<int, StmtPtr>& stmts);
-    void interpret();
+    Interpreter(Environment& globalEnvironment);
+    void setStatements(map<int, StmtPtr>& stmts);
+    void interpret(bool isCmd);
+    Environment getGlobal() const;
 
 };
 

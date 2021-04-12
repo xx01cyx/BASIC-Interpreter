@@ -18,8 +18,14 @@ class Basic : public QObject
 private:
     MainWindow* window;
     Filter* filter;
+    Scanner* scanner;
+    Parser* parser;
+    Interpreter* interpreter;
+
+    void executeCmdProgram(StmtPtr stmt);
 
 private slots:
+    void receiveCmdProgram(QString);
     void loadProgram();
     void runProgram();
     void clearProgram();
@@ -28,9 +34,10 @@ private slots:
     void quitInterpreter();
 
 public:
+    Environment global;
+
     Basic();
     ~Basic();
-
     void run();
 };
 

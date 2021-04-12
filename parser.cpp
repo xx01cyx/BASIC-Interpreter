@@ -1,9 +1,9 @@
 #include "parser.h"
 #include <QDebug>
 
-Parser::Parser(map<int, shared_ptr<Tokens>> &tokens)
+Parser::Parser()
 {
-    this->tokens = tokens;
+    this->tokens = map<int, shared_ptr<Tokens>>();
     lineIt = this->tokens.cbegin();
     tokenIt = lineIt->second->cbegin();
     statements = map<int, StmtPtr>();
@@ -11,28 +11,37 @@ Parser::Parser(map<int, shared_ptr<Tokens>> &tokens)
     window = MainWindow::getInstance();
 }
 
-void Parser::parse()
+void Parser::setLineTokens(map<int, shared_ptr<Tokens>> &tokens)
+{
+    this->statements.clear();
+    this->tokens = tokens;
+    lineIt = this->tokens.cbegin();
+    tokenIt = lineIt->second->cbegin();
+}
+
+void Parser::parse(bool requireAST)
 {
     while (lineIt != tokens.cend()) {
         errorSign = "";
-        parseLine();
+        parseLine(requireAST);
         lineIt++;
     }
 }
 
-void Parser::parseLine()
+void Parser::parseLine(bool requireAST)
 {
     int currentLine = lineIt->first;
     tokenIt = lineIt->second->cbegin();
 
     statements[currentLine] = statement();
 
-    if (tokenIt != lineIt->second->cend())
-        statements[currentLine] = make_shared<ErrorStmt>("Expect statement.");
+    if (errorSign.length() == 0 && tokenIt != lineIt->second->cend())
+        statements[currentLine] = make_shared<ErrorStmt>("Invalid statement.");
     else if (errorSign.length() != 0)
         statements[currentLine] = make_shared<ErrorStmt>(errorSign);
 
-    printLineAST(currentLine);
+    if (requireAST)
+        printLineAST(currentLine);
 }
 
 void Parser::printLineAST(int lineNumber)
@@ -53,7 +62,6 @@ void Parser::printLineAST(int lineNumber)
     }
 
     QString ASTLine = QString::number(lineNumber) + " " + stmtType;
-
     window->printAST(0, ASTLine);
     stmtIt->second->generateAST();
 }
@@ -61,8 +69,6 @@ void Parser::printLineAST(int lineNumber)
 
 StmtPtr Parser::statement()
 {
-    int currentLine = lineIt->first;
-
     if (match(REM))
         return remark();
     if (match(LET))
@@ -80,7 +86,8 @@ StmtPtr Parser::statement()
     if (match(ERROR))
         return error();
 
-    return make_shared<ErrorStmt>("Invalid statement.");
+    errorSign = "Invalid statement.";
+    return make_shared<ErrorStmt>(errorSign);
 
 }
 
@@ -97,8 +104,10 @@ StmtPtr Parser::remark()
 
 StmtPtr Parser::let()
 {
-    if (!match(IDENTIFIER))
-        return make_shared<ErrorStmt>("Expect a variable name as a left value.");
+    if (!match(IDENTIFIER)) {
+        errorSign = "Expect variable name as a left value.";
+        return make_shared<ErrorStmt>(errorSign);
+    }
 
     TokenPtr variable = previous();
     ExprPtr initializer = nullptr;
@@ -120,8 +129,10 @@ StmtPtr Parser::print()
 
 StmtPtr Parser::input()
 {
-    if (!match(IDENTIFIER))
-        return make_shared<ErrorStmt>("Expect a variable name after INPUT.");
+    if (!match(IDENTIFIER)) {
+        errorSign = "Expect variable name after INPUT.";
+        return make_shared<ErrorStmt>(errorSign);
+    }
 
     TokenPtr variable = previous();
 
@@ -131,8 +142,10 @@ StmtPtr Parser::input()
 
 StmtPtr Parser::goTo()
 {
-    if (!match(NUMBER))
-        return make_shared<ErrorStmt>("Expect a line number after GOTO.");
+    if (!match(NUMBER)) {
+        errorSign = "Expect line number after GOTO.";
+        return make_shared<ErrorStmt>(errorSign);
+    }
 
     TokenPtr line = previous();
 
@@ -144,17 +157,23 @@ StmtPtr Parser::ifThen()
 {
     ExprPtr left = expression();
 
-    if (!(match(LESS) || match(EQUAL) || match(GREATER)))
-        return make_shared<ErrorStmt>("Expect comparison after IF.");
+    if (!(match(LESS) || match(EQUAL) || match(GREATER))) {
+        errorSign = "Expect comparison after IF.";
+        return make_shared<ErrorStmt>(errorSign);
+    }
 
     TokenType comparison = previous()->type;
     ExprPtr right = expression();
 
-    if (!match(THEN))
-        return make_shared<ErrorStmt>("Expect THEN in IF statement.");
+    if (!match(THEN)) {
+        errorSign = "Expect THEN in IF statement.";
+        return make_shared<ErrorStmt>(errorSign);
+    }
 
-    if (!match(NUMBER))
-        return make_shared<ErrorStmt>("Expect a line number after THEN.");
+    if (!match(NUMBER)) {
+        errorSign = "Expect line number after THEN.";
+        return make_shared<ErrorStmt>(errorSign);
+    }
 
     TokenPtr line = previous();
 
@@ -169,7 +188,8 @@ StmtPtr Parser::end()
 
 StmtPtr Parser::error()
 {
-    return make_shared<ErrorStmt>(previous());
+    errorSign = previous()->lexeme;
+    return make_shared<ErrorStmt>(errorSign);
 }
 
 
@@ -243,7 +263,7 @@ ExprPtr Parser::primary()
         return expr;
     }
 
-    errorSign = "Unexpected token.";
+    errorSign = "Invalid expression.";
     return make_shared<ErrorExpr>();
 
 }

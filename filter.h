@@ -14,7 +14,7 @@
 using namespace std;
 
 enum Command {
-    RUN, LOAD, LIST, CLEAR, HELP, QUIT,
+    LET_CMD, PRINT_CMD, INPUT_CMD, RUN, LOAD, LIST, CLEAR, HELP, QUIT, ERROR_CMD
 };
 
 class Filter : public QObject
@@ -32,9 +32,10 @@ public:
     void reset();
 
 private slots:
-    void executeCommand(Command command);
+    void executeCommand(Command command, QString cmd);
 
 signals:
+    void cmdProgram(QString);
     void run();
     void load();
     void clear();
@@ -48,6 +49,7 @@ private:
 
     void filterLine(QString line);
     int getLineNumber(QString line, bool isProgram);
+    Command judgeCmd(QString cmd);
 
 };
 

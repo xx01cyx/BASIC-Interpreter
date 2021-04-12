@@ -26,7 +26,7 @@ public:
     TokenType type;
 
     Stmt(TokenType type) : type(type) { window = MainWindow::getInstance(); }
-    virtual void execute(Environment &environment, int& pc) = 0;
+    virtual void execute(Environment &global, Environment &local, int& pc, bool cmd) = 0;
     virtual void generateAST() const = 0;
 
 };
@@ -44,7 +44,7 @@ public:
 
     RemarkStmt(TokenPtr remark) : Stmt(REM), remark(remark) {}
 
-    void execute(Environment &environment, int& pc) override {}
+    void execute(Environment &global, Environment &local, int& pc, bool cmd) override {}
 
     void generateAST() const override {
         window->printAST(1, remark->lexeme);
@@ -64,8 +64,11 @@ public:
     LetStmt(TokenPtr variable, ExprPtr initializer)
         : Stmt(LET), variable(variable), initializer(initializer) {}
 
-    void execute(Environment &environment, int& pc) override {
-        environment[variable->lexeme] = initializer->evaluate(environment);
+    void execute(Environment &global, Environment &local, int& pc, bool cmd) override {
+        if (cmd)
+            global[variable->lexeme] = initializer->evaluate(global, local);
+        else
+            local[variable->lexeme] = initializer->evaluate(global, local);
     }
 
     void generateAST() const override {
@@ -85,8 +88,8 @@ public:
 
     PrintStmt(ExprPtr expr) : Stmt(PRINT), expression(expr) {}
 
-    void execute(Environment &environment, int& pc) override {
-        int result = expression->evaluate(environment);
+    void execute(Environment& global, Environment& local, int& pc, bool cmd) override {
+        int result = expression->evaluate(global, local);
         window->printResult(QString::number(result));
     }
 
@@ -109,14 +112,16 @@ public:
         connect(window, SIGNAL(input(QString)), this, SLOT(getInput(QString)));
     }
 
-    // to be revised
-
-    void execute(Environment &environment, int& pc) override {
+    void execute(Environment &global, Environment &local, int& pc, bool cmd) override {
 
         window->setCmdPrompt();
         window->loop.exec();
 
-        environment[variable->lexeme] = this->value;
+        if (cmd) {
+            global[variable->lexeme] = this->value;
+        }
+        else
+            local[variable->lexeme] = this->value;
 
     }
 
@@ -126,19 +131,22 @@ public:
 
 private slots:
 
-    int getInput(QString input) {
+    void getInput(QString input) {
 
         QString valueStr = input.mid(3).trimmed();
 
         bool ok;
         int value = valueStr.toInt(&ok);
-        if (!ok)
-            throw RunTimeError("Invalid input.");
+        if (!ok) {
+            window->warn("Invalid input.");
+            return;
+        }
 
         this->value = value;
 
-        window->loop.quit();
+        window->loop.exit(0);
         window->clearCmdPrompt();
+
     }
 
 };
@@ -153,7 +161,7 @@ public:
 
     GotoStmt(TokenPtr line) : Stmt(GOTO), line(line) {}
 
-    void execute(Environment &environment, int& pc) override {
+    void execute(Environment &global, Environment &local, int& pc, bool cmd) override {
 
         bool ok;
         int lineNumber = (line->lexeme).toInt(&ok, 0);
@@ -183,9 +191,10 @@ public:
     IfStmt(ExprPtr left, TokenType comparison, ExprPtr right, TokenPtr line)
         : Stmt(IF), left(left), comparison(comparison), right(right), line(line) {}
 
-    void execute(Environment &environment, int& pc) override {
+    void execute(Environment &global, Environment &local, int& pc, bool cmd) override {
 
-        int valL = left->evaluate(environment), valR = right->evaluate(environment);
+        int valL = left->evaluate(global, local);
+        int valR = right->evaluate(global, local);
 
         bool condition;
 
@@ -197,7 +206,7 @@ public:
 
         if (condition) {
             StmtPtr goTo = make_shared<GotoStmt>(line);
-            goTo->execute(environment, pc);
+            goTo->execute(global, local, pc, false);
         }
     }
 
@@ -226,8 +235,8 @@ public:
 
     EndStmt() : Stmt(END) {}
 
-    void execute(Environment &environment, int& pc) override {
-        environment.clear();
+    void execute(Environment &global, Environment &local, int& pc, bool cmd) override {
+        local.clear();
         throw EndProgram();
     }
 
@@ -247,8 +256,8 @@ public:
     ErrorStmt(TokenPtr error) : Stmt(ERROR), errorMessage(error->lexeme) {}
     ErrorStmt(QString errorMessage) : Stmt(ERROR), errorMessage(errorMessage) {}
 
-    void execute(Environment &environment, int& pc) override {
-        environment.clear();
+    void execute(Environment &global, Environment &local, int& pc, bool cmd) override {
+        local.clear();
         throw Error(errorMessage);
     }
 

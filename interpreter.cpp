@@ -1,15 +1,22 @@
 #include "interpreter.h"
 #include <QDebug>
 
-Interpreter::Interpreter(map<int, StmtPtr>& stmts)
+Interpreter::Interpreter(Environment& global)
+{
+    statements = map<int, StmtPtr>();
+    stmtIt = statements.cbegin();
+    window = MainWindow::getInstance();
+    this->global = global;
+    local = Environment();
+}
+
+void Interpreter::setStatements(map<int, StmtPtr> &stmts)
 {
     statements = stmts;
     stmtIt = statements.cbegin();
-    window = MainWindow::getInstance();
-    environment = Environment();
 }
 
-void Interpreter::interpret()
+void Interpreter::interpret(bool isCmd)
 {
     int pc;
 
@@ -17,7 +24,7 @@ void Interpreter::interpret()
         while (stmtIt != statements.cend()) {
             pc = stmtIt->first;
             StmtPtr stmt = stmtIt->second;
-            stmt->execute(environment, pc);
+            stmt->execute(global, local, pc, isCmd);
 
             if (pc != stmtIt->first) {
                 auto tmpIt = statements.find(pc);
@@ -31,12 +38,20 @@ void Interpreter::interpret()
                 stmtIt++;
         }
     } catch (EndProgram end) {
-
     } catch (Error e) {
-        QString errorMessage = "[Line " + QString::number(pc) + " Error]: " + e.message;
+        QString errorMessage;
+        if (isCmd)
+            errorMessage = "[Error]: " + e.message;
+        else
+            errorMessage = "[Line " + QString::number(pc) + " Error]: " + e.message;
         window->printResult(errorMessage);
         window->setProgramStatus(0);
         window->clearCmdPrompt();
     }
+}
+
+Environment Interpreter::getGlobal() const
+{
+    return this->global;
 }
 

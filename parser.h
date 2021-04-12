@@ -18,8 +18,9 @@ public:
 
     map<int, StmtPtr> statements;
 
-    Parser(map<int, shared_ptr<Tokens>>& tokens);
-    void parse();
+    Parser();
+    void setLineTokens(map<int, shared_ptr<Tokens>>& tokens);
+    void parse(bool ast);
 
 private:
 
@@ -29,7 +30,7 @@ private:
     QString errorSign;
     MainWindow* window;
 
-    void parseLine();
+    void parseLine(bool requireAST);
     void printLineAST(int lineNumber);
 
     StmtPtr statement();

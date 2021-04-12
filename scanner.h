@@ -20,7 +20,8 @@ public:
 
     map<int, shared_ptr<Tokens>> tokens;
 
-    Scanner(map<int, QString>& lines);
+    Scanner();
+    void setLines(map<int, QString>& lines);
     void scan();
 
 private:
@@ -43,6 +44,7 @@ private:
 
     char advance();
     char peek();
+    bool isunderline(char c);
     bool isAtEnd();
 };
 

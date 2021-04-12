@@ -119,22 +119,9 @@ bool MainWindow::checkRun()
     return runable;
 }
 
-void MainWindow::clearResult()
-{
-    ui->textBrowser_result->clear();
-}
-
 void MainWindow::printResult(QString result)
 {
     ui->textBrowser_result->append(result);
-}
-
-void MainWindow::clearText()
-{
-    ui->textBrowser_code->clear();
-    ui->textBrowser_result->clear();
-    ui->textBrowser_tree->clear();
-    ui->lineEdit_command->clear();
 }
 
 void MainWindow::helpInfo()
@@ -188,10 +175,34 @@ void MainWindow::setCmdPrompt()
     ui->lineEdit_command->setText(" ? ");
 }
 
+void MainWindow::warn(QString warningMessage)
+{
+    QMessageBox::warning(this, "Warning", warningMessage, QMessageBox::Yes);
+}
+
+void MainWindow::clearText()
+{
+    ui->textBrowser_code->clear();
+    ui->textBrowser_result->clear();
+    ui->textBrowser_tree->clear();
+    ui->lineEdit_command->clear();
+}
+
+void MainWindow::clearResult()
+{
+    ui->textBrowser_result->clear();
+}
+
 void MainWindow::clearCmdPrompt()
 {
     ui->lineEdit_command->setText("");
 }
+
+void MainWindow::clearAST()
+{
+    ui->textBrowser_tree->setText("");
+}
+
 
 void MainWindow::on_lineEdit_command_cursorPositionChanged(int oldPos, int newPos)
 {

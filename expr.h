@@ -22,7 +22,7 @@ protected:
 public:
 
     Expr() { window = MainWindow::getInstance(); }
-    virtual int evaluate(Environment& environment) = 0;
+    virtual int evaluate(Environment& global, Environment& local) = 0;
     virtual void generateAST(int indent) const = 0;
 
 };
@@ -38,7 +38,7 @@ public:
 
     ConstantExpr(int v) : value(v) {}
 
-    int evaluate(Environment& environment) override { return value; }
+    int evaluate(Environment& global, Environment& local) override { return value; }
 
     void generateAST(int indent) const override {
         window->printAST(indent, QString::number(value));
@@ -52,10 +52,12 @@ public:
 
     IdentifierExpr(QString n) : name(n) {}
 
-    int evaluate(Environment& environment) override {
-        if (environment.find(name) != environment.end())
-            return environment[name];
-        throw RunTimeError("The variable " + name + " does not exist.");
+    int evaluate(Environment& global, Environment& local) override {
+        if (local.find(name) != local.end())
+            return local[name];
+        if (global.find(name) != global.end())
+            return global[name];
+        throw RunTimeError("Variable `" + name + "` does not exist.");
     }
 
     void generateAST(int indent) const override {
@@ -71,8 +73,8 @@ public:
 
     UnaryExpr(ExprPtr r) : right(r) {}
 
-    int evaluate(Environment& environment) override {
-        return -right->evaluate(environment);
+    int evaluate(Environment& global, Environment& local) override {
+        return -right->evaluate(global, local);
     }
 
     void generateAST(int indent) const override {
@@ -93,13 +95,23 @@ public:
     CompoundExpr(ExprPtr l, TokenType op, ExprPtr r)
         : left(l), op(op), right(r) {}
 
-    int evaluate(Environment& environment) override {
+    int evaluate(Environment& global, Environment& local) override {
+
+        int leftOp = left->evaluate(global, local);
+        int rightOp = right->evaluate(global, local);
+
         switch(op) {
-            case PLUS: return left->evaluate(environment) + right->evaluate(environment);
-            case MINUS: return left->evaluate(environment) - right->evaluate(environment);
-            case MULTIPLY: return left->evaluate(environment) * right->evaluate(environment);
-            case DEVIDE: return left->evaluate(environment) / right->evaluate(environment);
-            case POWER: return pow(left->evaluate(environment), right->evaluate(environment));
+            case PLUS: return leftOp + rightOp;
+            case MINUS: return leftOp - rightOp;
+            case MULTIPLY: return leftOp * rightOp;
+            case DEVIDE:
+                if (!rightOp)
+                    throw RunTimeError("Divisor cannot be 0.");
+                return leftOp / rightOp;
+            case POWER:
+                if (!leftOp && !rightOp)
+                    throw RunTimeError("Base number and exponent number cannot both be 0.");
+                return pow(leftOp, rightOp);
         }
     }
 
@@ -129,8 +141,8 @@ public:
 
     GroupingExpr(ExprPtr e) : expr(e) {}
 
-    int evaluate(Environment& environment) override {
-        return expr->evaluate(environment);
+    int evaluate(Environment& global, Environment& local) override {
+        return expr->evaluate(global, local);
     }
 
     void generateAST(int indent) const override {
@@ -144,7 +156,7 @@ public:
 
     ErrorExpr() {}
 
-    int evaluate(Environment& environment) override {}
+    int evaluate(Environment& global, Environment& local) override {}
 
     void generateAST(int indent) const override {}
 };
